@@ -1,0 +1,136 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // 1. Create catalog_requests table
+        if (!Schema::hasTable('catalog_requests')) {
+            Schema::create('catalog_requests', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('vendor_id');
+                $table->enum('type', ['attribute_spec', 'category'])->default('attribute_spec');
+                $table->string('name', 200);
+                $table->unsignedBigInteger('parent_id')->nullable()->comment('For subcategory requests');
+                $table->text('values')->nullable()->comment('Comma-separated spec values or subcategories');
+                $table->text('reason')->comment('Mandatory justification from vendor');
+                $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+                $table->text('admin_notes')->nullable();
+                $table->unsignedBigInteger('handled_by')->nullable();
+                $table->timestamp('handled_at')->nullable();
+                $table->timestamps();
+
+                $table->index('vendor_id');
+                $table->index('type');
+                $table->index('status');
+                $table->foreign('vendor_id')->references('id')->on('vendors')->cascadeOnDelete();
+                $table->foreign('handled_by')->references('id')->on('admins')->nullOnDelete();
+            });
+        }
+
+        // 2. Seed initial Standard Specifications Available if attributes table is empty or missing these
+        $initialSpecs = [
+            [
+                'name' => 'steel_grades',
+                'display_name' => 'Steel Grades',
+                'type' => 'select',
+                'is_filterable' => true,
+                'is_required' => false,
+                'sort_order' => 1,
+                'status' => 'active',
+                'values' => ['Fe 500D', 'Fe 550D', 'Fe 600', 'CRS Grade']
+            ],
+            [
+                'name' => 'cement_types',
+                'display_name' => 'Cement Types',
+                'type' => 'select',
+                'is_filterable' => true,
+                'is_required' => false,
+                'sort_order' => 2,
+                'status' => 'active',
+                'values' => ['OPC 43', 'OPC 53', 'PPC', 'PSC', 'White Cement']
+            ],
+            [
+                'name' => 'brick_block_sizes',
+                'display_name' => 'Brick & Block Sizes',
+                'type' => 'select',
+                'is_filterable' => true,
+                'is_required' => false,
+                'sort_order' => 3,
+                'status' => 'active',
+                'values' => ['Standard 9×4×3 inch', 'AAC Block 600×200×150mm', 'Fly Ash 230×110×75mm', 'Solid Concrete Block']
+            ],
+            [
+                'name' => 'plumbing_pipe_diameters',
+                'display_name' => 'Plumbing Pipe Diameters',
+                'type' => 'select',
+                'is_filterable' => true,
+                'is_required' => false,
+                'sort_order' => 4,
+                'status' => 'active',
+                'values' => ['20mm (1/2 inch)', '25mm (3/4 inch)', '32mm (1 inch)', '40mm (1-1/4 inch)', '50mm (2 inch)']
+            ],
+            [
+                'name' => 'electrical_cable_sizes',
+                'display_name' => 'Electrical Cable Sizes',
+                'type' => 'select',
+                'is_filterable' => true,
+                'is_required' => false,
+                'sort_order' => 5,
+                'status' => 'active',
+                'values' => ['1.5 sq mm', '2.5 sq mm', '4.0 sq mm', '6.0 sq mm', 'Armoured Cable 10 sq mm']
+            ]
+        ];
+
+        foreach ($initialSpecs as $spec) {
+            $existing = DB::table('attributes')->where('name', $spec['name'])->first();
+            $attributeId = null;
+
+            if (!$existing) {
+                $attributeId = DB::table('attributes')->insertGetId([
+                    'name' => $spec['name'],
+                    'display_name' => $spec['display_name'],
+                    'type' => $spec['type'],
+                    'is_filterable' => $spec['is_filterable'],
+                    'is_required' => $spec['is_required'],
+                    'sort_order' => $spec['sort_order'],
+                    'status' => $spec['status'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                $attributeId = $existing->id;
+            }
+
+            foreach ($spec['values'] as $idx => $val) {
+                $valExists = DB::table('attribute_values')
+                    ->where('attribute_id', $attributeId)
+                    ->where('value', $val)
+                    ->exists();
+
+                if (!$valExists) {
+                    DB::table('attribute_values')->insert([
+                        'attribute_id' => $attributeId,
+                        'value' => $val,
+                        'display_value' => $val,
+                        'sort_order' => $idx,
+                        'status' => 'active',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('catalog_requests');
+    }
+};
