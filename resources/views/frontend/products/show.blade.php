@@ -67,15 +67,40 @@
                 <!-- Vendor Highlights Box -->
                 <div class="border rounded p-3 mb-4 bg-white">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-patch-check-fill text-primary fs-4 me-2"></i>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-patch-check-fill text-primary fs-4"></i>
                             <div>
                                 <h6 class="fw-bold mb-0 text-dark">{{ $product->vendor->company_name ?? 'Garudo Verified Supplier' }}</h6>
-                                <span class="small text-muted">{{ $product->vendor->business_type ?? 'Manufacturer' }}</span>
+                                <span class="small text-muted">{{ $product->vendor->business_type ?? 'Supplier' }}</span>
                             </div>
                         </div>
-                        <span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-check-circle me-1"></i> Verified</span>
+                        @php
+                            $isOem = $product->brand && $product->brand->isOwnedBy($product->vendor);
+                            $dealerAuth = ($product->brand && !$isOem) ? $product->vendor->brandAuthorizations()->where('brand_id', $product->brand->id)->where('garudo_approval_status', 'verified')->first() : null;
+                        @endphp
+
+                        @if($isOem)
+                            <span class="badge bg-success-subtle text-success border border-success px-2 py-1">
+                                <i class="bi bi-patch-check-fill me-1"></i> Verified OEM
+                            </span>
+                        @elseif($dealerAuth)
+                            <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1">
+                                <i class="bi bi-shield-check me-1"></i> Authorized Dealer
+                            </span>
+                        @else
+                            <span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-check-circle me-1"></i> Verified</span>
+                        @endif
                     </div>
+
+                    @if($dealerAuth && $dealerAuth->certificate_number)
+                        <div class="p-2 rounded bg-light border mb-2 d-flex justify-content-between align-items-center small">
+                            <span class="text-secondary"><i class="bi bi-award-fill text-warning me-1"></i>Garudo Authorized Dealer of <strong>{{ $product->brand->name }}</strong></span>
+                            <a href="{{ route('certificate.dealer.verify', $dealerAuth->certificate_number) }}" target="_blank" class="text-primary text-decoration-none fw-semibold">
+                                View Certificate <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    @endif
+
                     <div class="row text-center mt-3 pt-2 border-top g-2">
                         <div class="col-6"><button class="btn btn-outline-dark btn-sm w-100"><i class="bi bi-telephone me-1"></i> Call Vendor</button></div>
                         <div class="col-6"><button class="btn btn-success btn-sm w-100"><i class="bi bi-whatsapp me-1"></i> WhatsApp</button></div>

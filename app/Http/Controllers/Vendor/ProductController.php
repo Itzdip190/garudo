@@ -130,6 +130,13 @@ class ProductController extends Controller
             'initial_stock' => 'nullable|integer|min:0',
         ]);
 
+        if (!empty($validated['brand_id'])) {
+            $selectedBrand = Brand::find($validated['brand_id']);
+            if ($selectedBrand && !$selectedBrand->canVendorSell($vendor)) {
+                return back()->withInput()->with('error', "The brand '{$selectedBrand->name}' is trademark protected on Garudo. You must be the verified Brand Owner or hold an active Authorized Dealership to list products under this brand.");
+            }
+        }
+
         DB::beginTransaction();
         try {
             $slug = Str::slug($validated['name']) . '-' . rand(1000, 9999);
@@ -330,6 +337,13 @@ class ProductController extends Controller
             'variants' => 'nullable|array',
             'initial_stock' => 'nullable|integer|min:0',
         ]);
+
+        if (!empty($validated['brand_id'])) {
+            $selectedBrand = Brand::find($validated['brand_id']);
+            if ($selectedBrand && !$selectedBrand->canVendorSell($vendor)) {
+                return back()->withInput()->with('error', "The brand '{$selectedBrand->name}' is trademark protected on Garudo. You must be the verified Brand Owner or hold an active Authorized Dealership to list products under this brand.");
+            }
+        }
 
         DB::beginTransaction();
         try {

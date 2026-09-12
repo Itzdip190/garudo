@@ -51,6 +51,27 @@
             </a>
         </li>
 
+        <!-- Brand Registry (OEM Verification) -->
+        <li>
+            <a href="{{ route('vendor.brand-registry.index') }}" class="sidebar-item-link {{ request()->routeIs('vendor.brand-registry.*') ? 'active' : '' }}">
+                <div class="menu-main-content">
+                    <i class="bi bi-award-fill menu-icon text-warning"></i>
+                    <span>Brand Registry (OEM)</span>
+                </div>
+                <span class="badge-sidebar badge-sidebar-blue">Official</span>
+            </a>
+        </li>
+
+        <!-- My Brand Dealerships -->
+        <li>
+            <a href="{{ route('vendor.dealer-authorizations.index') }}" class="sidebar-item-link {{ request()->routeIs('vendor.dealer-authorizations.*') ? 'active' : '' }}">
+                <div class="menu-main-content">
+                    <i class="bi bi-diagram-3-fill menu-icon text-success"></i>
+                    <span>My Dealerships</span>
+                </div>
+            </a>
+        </li>
+
         <!-- Products (Collapsible) -->
         <li>
             <a class="sidebar-item-link {{ request()->routeIs('vendor.products.*') || request()->routeIs('vendor.brands') || request()->routeIs('vendor.categories') || request()->routeIs('vendor.attributes') ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseProducts" role="button" aria-expanded="{{ request()->routeIs('vendor.products.*') || request()->routeIs('vendor.brands') || request()->routeIs('vendor.categories') || request()->routeIs('vendor.attributes') ? 'true' : 'false' }}" aria-controls="collapseProducts">
@@ -67,7 +88,9 @@
                     <li><a href="{{ route('vendor.products.quick-price') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.products.quick-price*') ? 'active' : '' }}"><i class="bi bi-tag me-1 text-warning"></i>Quick Price Change</a></li>
                     <li><a href="{{ route('vendor.products.bulk') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.products.bulk') ? 'active' : '' }}"><i class="bi bi-cloud-arrow-up me-1"></i>Bulk & Backup</a></li>
                     <li><a href="{{ route('vendor.products.logistics-policy') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.products.logistics-policy') ? 'active' : '' }}"><i class="bi bi-truck me-1 text-primary"></i>F.O.R. Logistics Policy</a></li>
-                    <li><a href="{{ route('vendor.brands') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.brands') ? 'active' : '' }}">Brands</a></li>
+                    <li><a href="{{ route('vendor.brand-registry.index') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.brand-registry.*') ? 'active' : '' }}"><i class="bi bi-award me-1 text-warning"></i>Brand Registry</a></li>
+                    <li><a href="{{ route('vendor.dealer-authorizations.index') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.dealer-authorizations.*') ? 'active' : '' }}"><i class="bi bi-diagram-3 me-1 text-success"></i>Dealership Authorizations</a></li>
+                    <li><a href="{{ route('vendor.brands') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.brands') ? 'active' : '' }}">Brands Directory</a></li>
                     <li><a href="{{ route('vendor.categories') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.categories') ? 'active' : '' }}">Categories</a></li>
                     <li><a href="{{ route('vendor.attributes') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.attributes') ? 'active' : '' }}">Attributes</a></li>
                 </ul>

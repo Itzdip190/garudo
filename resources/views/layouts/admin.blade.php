@@ -515,6 +515,36 @@
                 </div>
             </a>
 
+            <a href="{{ route('admin.brands.registry.index') }}" class="admin-nav-link {{ request()->routeIs('admin.brands.registry.*') ? 'active' : '' }}">
+                <div class="link-left">
+                    <i class="bi bi-award-fill text-warning"></i>
+                    <span>Brand Registry & OEM</span>
+                </div>
+                @php
+                    $pendingBrandApps = \Illuminate\Support\Facades\Schema::hasTable('brand_registrations')
+                        ? \App\Models\BrandRegistration::where('status', 'pending')->count()
+                        : 0;
+                @endphp
+                @if($pendingBrandApps > 0)
+                    <span class="badge-nav-counter bg-warning text-dark">{{ $pendingBrandApps }}</span>
+                @endif
+            </a>
+
+            <a href="{{ route('admin.dealer-authorizations.index') }}" class="admin-nav-link {{ request()->routeIs('admin.dealer-authorizations.*') ? 'active' : '' }}">
+                <div class="link-left">
+                    <i class="bi bi-patch-check-fill text-success"></i>
+                    <span>Dealer Authorizations</span>
+                </div>
+                @php
+                    $pendingDealerAuths = \Illuminate\Support\Facades\Schema::hasTable('brand_dealer_authorizations')
+                        ? \App\Models\BrandDealerAuthorization::where('garudo_approval_status', 'pending')->count()
+                        : 0;
+                @endphp
+                @if($pendingDealerAuths > 0)
+                    <span class="badge-nav-counter bg-warning text-dark">{{ $pendingDealerAuths }}</span>
+                @endif
+            </a>
+
             <a href="{{ route('admin.attributes.index') }}" class="admin-nav-link {{ request()->routeIs('admin.attributes.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-sliders"></i>

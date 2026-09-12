@@ -230,6 +230,64 @@ class Vendor extends Authenticatable
         return $this->kyc_status === 'verified' && $this->approval_status === 'approved' && $this->is_verified;
     }
 
+    public function ownedBrands()
+    {
+        return $this->hasMany(Brand::class, 'owner_vendor_id');
+    }
+
+    public function brandRegistrations()
+    {
+        return $this->hasMany(BrandRegistration::class);
+    }
+
+    public function brandAuthorizations()
+    {
+        return $this->hasMany(BrandDealerAuthorization::class);
+    }
+
+    public function verifiedBrandAuthorizations()
+    {
+        return $this->hasMany(BrandDealerAuthorization::class)
+                    ->where('garudo_approval_status', 'verified')
+                    ->where('status', 'active');
+    }
+
+    public function authorizedBrands()
+    {
+        return $this->belongsToMany(Brand::class, 'brand_dealer_authorizations', 'vendor_id', 'brand_id')
+                    ->wherePivot('garudo_approval_status', 'verified')
+                    ->wherePivot('status', 'active')
+                    ->withPivot('authorization_type', 'territory_type', 'certificate_number', 'valid_until', 'is_lifetime_valid')
+                    ->withTimestamps();
+    }
+
+    public function isAuthorizedForBrand($brand): bool
+    {
+        $brandId = $brand instanceof Brand ? $brand->id : (int) $brand;
+
+        // Check if vendor owns this brand
+        if ($this->ownedBrands()->where('id', $brandId)->exists()) {
+            return true;
+        }
+
+        // Check if vendor holds active verified dealer authorization
+        return $this->brandAuthorizations()
+                    ->where('brand_id', $brandId)
+                    ->where('garudo_approval_status', 'verified')
+                    ->where('status', 'active')
+                    ->exists();
+    }
+
+    public function canSellBrand($brand): bool
+    {
+        $brandModel = $brand instanceof Brand ? $brand : Brand::find($brand);
+        if (!$brandModel) {
+            return true;
+        }
+
+        return $brandModel->canVendorSell($this);
+    }
+
     public function getCertificateUrlAttribute(): ?string
     {
         return $this->activeCertificate?->verification_url;

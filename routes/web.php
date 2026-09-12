@@ -14,6 +14,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/product/{slug}', [FrontendProductController::class, 'show'])->name('products.show');
 Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
 Route::get('/verify/certificate/{certificate_number}', [\App\Http\Controllers\Frontend\CertificateVerificationController::class, 'verify'])->name('certificate.verify');
+Route::get('/verify/dealer-authorization/{certificate_number}', [\App\Http\Controllers\Frontend\DealerAuthorizationVerificationController::class, 'verify'])->name('certificate.dealer.verify');
 
 // Public Vendor Storefront & Reviews
 Route::get('/store/{slug}', [\App\Http\Controllers\Frontend\VendorStoreController::class, 'show'])->name('store.show');
@@ -249,6 +250,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/categories/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
 
+        // Brand Registry & Trademark Applications
+        Route::get('/brand-registry', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'index'])->name('brands.registry.index');
+        Route::get('/brand-registry/{id}', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'show'])->name('brands.registry.show');
+        Route::post('/brand-registry/{id}/approve', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'approve'])->name('brands.registry.approve');
+        Route::post('/brand-registry/{id}/reject', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'reject'])->name('brands.registry.reject');
+        Route::post('/brands/{id}/toggle-protection', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'toggleProtection'])->name('brands.toggle-protection');
+
+        // Dealer & Distributor Authorizations
+        Route::get('/dealer-authorizations', [App\Http\Controllers\Admin\AdminDealerAuthorizationController::class, 'index'])->name('dealer-authorizations.index');
+        Route::get('/dealer-authorizations/{id}', [App\Http\Controllers\Admin\AdminDealerAuthorizationController::class, 'show'])->name('dealer-authorizations.show');
+        Route::post('/dealer-authorizations/{id}/approve', [App\Http\Controllers\Admin\AdminDealerAuthorizationController::class, 'approve'])->name('dealer-authorizations.approve');
+        Route::post('/dealer-authorizations/{id}/reject', [App\Http\Controllers\Admin\AdminDealerAuthorizationController::class, 'reject'])->name('dealer-authorizations.reject');
+        Route::post('/dealer-authorizations/{id}/revoke', [App\Http\Controllers\Admin\AdminDealerAuthorizationController::class, 'revoke'])->name('dealer-authorizations.revoke');
+
         // Standard Specifications & Attributes
         Route::get('/attributes', [App\Http\Controllers\Admin\AttributeController::class, 'index'])->name('attributes.index');
         Route::post('/attributes', [App\Http\Controllers\Admin\AttributeController::class, 'store'])->name('attributes.store');
@@ -360,6 +375,21 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
         Route::post('/categories/quick-store', [App\Http\Controllers\Vendor\ProductController::class, 'ajaxStoreCategory'])->name('categories.quick-store');
         Route::get('/attributes', [App\Http\Controllers\Vendor\ProductController::class, 'attributes'])->name('attributes');
         Route::post('/catalog-requests', [App\Http\Controllers\Vendor\ProductController::class, 'storeCatalogRequest'])->name('catalog-requests.store');
+
+        // Brand Registry & OEM Accreditation (Brand Owner)
+        Route::get('/brand-registry', [App\Http\Controllers\Vendor\VendorBrandRegistryController::class, 'index'])->name('brand-registry.index');
+        Route::get('/brand-registry/create', [App\Http\Controllers\Vendor\VendorBrandRegistryController::class, 'create'])->name('brand-registry.create');
+        Route::post('/brand-registry', [App\Http\Controllers\Vendor\VendorBrandRegistryController::class, 'store'])->name('brand-registry.store');
+        Route::get('/brand-registry/{id}', [App\Http\Controllers\Vendor\VendorBrandRegistryController::class, 'show'])->name('brand-registry.show');
+        Route::get('/brand-registry/{id}/dealers', [App\Http\Controllers\Vendor\VendorBrandRegistryController::class, 'dealers'])->name('brand-registry.dealers');
+        Route::post('/brand-registry/{id}/dealers/{authId}/approve', [App\Http\Controllers\Vendor\VendorBrandRegistryController::class, 'approveDealer'])->name('brand-registry.dealers.approve');
+        Route::post('/brand-registry/{id}/dealers/{authId}/reject', [App\Http\Controllers\Vendor\VendorBrandRegistryController::class, 'rejectDealer'])->name('brand-registry.dealers.reject');
+
+        // Brand Dealership Authorizations & Certificates (Distributor / Dealer)
+        Route::get('/dealer-authorizations', [App\Http\Controllers\Vendor\VendorDealerAuthorizationController::class, 'index'])->name('dealer-authorizations.index');
+        Route::get('/dealer-authorizations/apply', [App\Http\Controllers\Vendor\VendorDealerAuthorizationController::class, 'apply'])->name('dealer-authorizations.apply');
+        Route::post('/dealer-authorizations', [App\Http\Controllers\Vendor\VendorDealerAuthorizationController::class, 'storeApplication'])->name('dealer-authorizations.store');
+        Route::get('/dealer-authorizations/{id}/certificate', [App\Http\Controllers\Vendor\VendorDealerAuthorizationController::class, 'showCertificate'])->name('dealer-authorizations.certificate');
 
         // Orders & Logistics
         Route::get('/orders', [App\Http\Controllers\Vendor\OrderController::class, 'index'])->name('orders.index');
