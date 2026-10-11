@@ -16,6 +16,8 @@ class BrandRegistration extends Model
         'vendor_id',
         'brand_name',
         'brand_slug',
+        'parent_brand_id',
+        'brand_tier',
         'brand_type',
         'category_ids',
         'logo_path',
@@ -46,6 +48,7 @@ class BrandRegistration extends Model
         'category_ids'              => 'array',
         'is_exclusive_distribution' => 'boolean',
         'year_established'          => 'integer',
+        'parent_brand_id'           => 'integer',
         'reviewed_at'               => 'datetime',
     ];
 
@@ -61,6 +64,11 @@ class BrandRegistration extends Model
     public function reviewer()
     {
         return $this->belongsTo(Admin::class, 'reviewed_by');
+    }
+
+    public function parentBrand()
+    {
+        return $this->belongsTo(Brand::class, 'parent_brand_id');
     }
 
     public function createdBrand()

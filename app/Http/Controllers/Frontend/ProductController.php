@@ -18,10 +18,27 @@ class ProductController extends Controller
             $matchedCategory = Category::where('slug', $catSlug)->first();
             if ($matchedCategory) {
                 $categoryIds = $matchedCategory->children()->pluck('id')->push($matchedCategory->id);
-                $query->whereIn('category_id', $categoryIds);
+                // Check if direct products exist for this category/subcategory
+                $hasDirect = Product::active()->whereIn('category_id', $categoryIds)->exists();
+                if ($hasDirect) {
+                    $query->whereIn('category_id', $categoryIds);
+                } else {
+                    // Fallback: If no products directly assigned to this subcategory yet, match by name or parent
+                    $catName = $matchedCategory->name;
+                    $query->where(function ($q) use ($matchedCategory, $catName) {
+                        $q->where('name', 'like', "%{$catName}%")
+                          ->orWhere('short_description', 'like', "%{$catName}%");
+                        if ($matchedCategory->parent_id) {
+                            $q->orWhere('category_id', $matchedCategory->parent_id);
+                        }
+                    });
+                }
             } else {
-                $query->whereHas('category', function ($q) use ($catSlug) {
-                    $q->where('slug', $catSlug);
+                // If slug is not in DB (e.g. demo taxonomy), search by keywords in product name & description
+                $searchKeywords = str_replace('-', ' ', $catSlug);
+                $query->where(function ($q) use ($searchKeywords) {
+                    $q->where('name', 'like', "%{$searchKeywords}%")
+                      ->orWhere('short_description', 'like', "%{$searchKeywords}%");
                 });
             }
         }
@@ -32,6 +49,17 @@ class ProductController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('short_description', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->filled('trending') || $request->filter === 'trending' || $request->sort === 'trending') {
+            $hasTrendingNowCol = \Illuminate\Support\Facades\Schema::hasColumn('products', 'is_trending_now');
+            $query->where(function ($q) use ($hasTrendingNowCol) {
+                if ($hasTrendingNowCol) {
+                    $q->where('is_trending_now', true)->orWhere('is_trending', true);
+                } else {
+                    $q->where('is_trending', true)->orWhere('is_popular', true);
+                }
+            })->orderBy('view_count', 'desc');
         }
 
         $products = $query->paginate(24);

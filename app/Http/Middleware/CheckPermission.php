@@ -13,11 +13,28 @@ class CheckPermission
     {
         $admin = Auth::guard('admin')->user();
 
-        if (!$admin || !$admin->hasPermission($permission)) {
+        if (!$admin) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        if ($admin->is_super_admin) {
+            return $next($request);
+        }
+
+        $permissions = explode('|', $permission);
+        $hasAny = false;
+        foreach ($permissions as $perm) {
+            if ($admin->hasPermission(trim($perm))) {
+                $hasAny = true;
+                break;
+            }
+        }
+
+        if (!$hasAny) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthorized action.'], 403);
             }
-            abort(403, 'Unauthorized action: missing permission [' . $permission . '].');
+            abort(403, 'Unauthorized action: Your account does not have the required access permission [' . $permission . '].');
         }
 
         return $next($request);

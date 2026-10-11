@@ -73,10 +73,15 @@ class ProductController extends Controller
     {
         $vendor = $this->getVendor();
         $categories = Category::where('status', 'active')->orderBy('name')->get();
-        $brands = Brand::where('status', 'active')->orderBy('name')->get();
+        $superBrands = Brand::with('activeSubBrands')
+                            ->whereNull('parent_id')
+                            ->where('status', 'active')
+                            ->orderBy('name')
+                            ->get();
+        $brands = Brand::with('superBrand')->where('status', 'active')->orderBy('name')->get();
         $warehouses = $vendor->warehouses()->active()->get();
 
-        return view('vendor.products.create', compact('vendor', 'categories', 'brands', 'warehouses'));
+        return view('vendor.products.create', compact('vendor', 'categories', 'brands', 'superBrands', 'warehouses'));
     }
 
     public function store(Request $request)
@@ -114,6 +119,14 @@ class ProductController extends Controller
             'free_shipping' => 'nullable|boolean',
             'shipping_charges' => 'nullable|numeric|min:0',
             'cod_available' => 'nullable|boolean',
+            'has_sample' => 'nullable|boolean',
+            'sample_type' => 'nullable|in:free,paid,partial_paid',
+            'sample_price' => 'nullable|numeric|min:0',
+            'sample_shipping_fee' => 'nullable|numeric|min:0',
+            'sample_max_qty' => 'nullable|integer|min:1',
+            'sample_unit_description' => 'nullable|string|max:255',
+            'sample_instructions' => 'nullable|string|max:2000',
+            'sample_stock' => 'nullable|integer|min:0',
             'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'specs' => 'nullable|array',
@@ -145,6 +158,18 @@ class ProductController extends Controller
             $productType = $validated['product_type'] ?? 'simple';
             $mrp = $validated['mrp'] ?? $validated['selling_price'];
             $wholesalePrice = $validated['wholesale_price'] ?? $validated['selling_price'];
+
+            $hasSample = $request->has('has_sample');
+            $sampleType = $request->input('sample_type', 'free');
+            $samplePrice = ($hasSample && $sampleType === 'paid') ? floatval($request->input('sample_price', 0)) : 0.00;
+            $sampleShipping = ($hasSample && in_array($sampleType, ['paid', 'partial_paid'])) ? floatval($request->input('sample_shipping_fee', 0)) : 0.00;
+
+            $allowQuotation = $request->has('allow_quotation');
+            $quotationMinQty = $request->input('quotation_min_qty');
+            $rawCustomFields = $request->input('quotation_custom_fields', []);
+            $cleanedCustomFields = is_array($rawCustomFields) ? array_values(array_filter(array_map('trim', $rawCustomFields))) : [];
+            $quotationNotes = $request->input('quotation_notes');
+            $quotationAttachmentsAllowed = $request->has('quotation_attachments_allowed');
 
             $product = $vendor->products()->create([
                 'category_id' => $validated['category_id'],
@@ -179,6 +204,19 @@ class ProductController extends Controller
                 'free_shipping' => $request->has('free_shipping'),
                 'shipping_charges' => $validated['shipping_charges'] ?? 0.00,
                 'cod_available' => $request->has('cod_available'),
+                'has_sample' => $hasSample,
+                'sample_type' => $sampleType,
+                'sample_price' => $samplePrice,
+                'sample_shipping_fee' => $sampleShipping,
+                'sample_max_qty' => $request->input('sample_max_qty', 1),
+                'sample_unit_description' => $request->input('sample_unit_description'),
+                'sample_instructions' => $request->input('sample_instructions'),
+                'sample_stock' => $request->input('sample_stock'),
+                'allow_quotation' => $allowQuotation,
+                'quotation_min_qty' => $quotationMinQty ?: null,
+                'quotation_custom_fields' => !empty($cleanedCustomFields) ? json_encode($cleanedCustomFields) : null,
+                'quotation_notes' => $quotationNotes,
+                'quotation_attachments_allowed' => $quotationAttachmentsAllowed,
                 'approval_status' => ($vendor->approval_status === 'approved' || $vendor->is_verified) ? 'approved' : 'pending',
                 'approved_at' => ($vendor->approval_status === 'approved' || $vendor->is_verified) ? now() : null,
                 'status' => 'active',
@@ -290,10 +328,15 @@ class ProductController extends Controller
         $vendor = $this->getVendor();
         $product = $vendor->products()->with(['images', 'specifications', 'variants', 'inventory'])->findOrFail($id);
         $categories = Category::where('status', 'active')->orderBy('name')->get();
-        $brands = Brand::where('status', 'active')->orderBy('name')->get();
+        $superBrands = Brand::with('activeSubBrands')
+                            ->whereNull('parent_id')
+                            ->where('status', 'active')
+                            ->orderBy('name')
+                            ->get();
+        $brands = Brand::with('superBrand')->where('status', 'active')->orderBy('name')->get();
         $warehouses = $vendor->warehouses()->active()->get();
 
-        return view('vendor.products.edit', compact('vendor', 'product', 'categories', 'brands', 'warehouses'));
+        return view('vendor.products.edit', compact('vendor', 'product', 'categories', 'brands', 'superBrands', 'warehouses'));
     }
 
     public function update(Request $request, $id)
@@ -325,6 +368,17 @@ class ProductController extends Controller
             'short_description' => 'nullable|string|max:1000',
             'description' => 'nullable|string',
             'features' => 'nullable|string',
+            'free_shipping' => 'nullable|boolean',
+            'shipping_charges' => 'nullable|numeric|min:0',
+            'cod_available' => 'nullable|boolean',
+            'has_sample' => 'nullable|boolean',
+            'sample_type' => 'nullable|in:free,paid,partial_paid',
+            'sample_price' => 'nullable|numeric|min:0',
+            'sample_shipping_fee' => 'nullable|numeric|min:0',
+            'sample_max_qty' => 'nullable|integer|min:1',
+            'sample_unit_description' => 'nullable|string|max:255',
+            'sample_instructions' => 'nullable|string|max:2000',
+            'sample_stock' => 'nullable|integer|min:0',
             'status' => 'nullable|in:active,inactive,out_of_stock,discontinued',
             'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -347,6 +401,18 @@ class ProductController extends Controller
 
         DB::beginTransaction();
         try {
+            $hasSample = $request->has('has_sample');
+            $sampleType = $request->input('sample_type', 'free');
+            $samplePrice = ($hasSample && $sampleType === 'paid') ? floatval($request->input('sample_price', 0)) : 0.00;
+            $sampleShipping = ($hasSample && in_array($sampleType, ['paid', 'partial_paid'])) ? floatval($request->input('sample_shipping_fee', 0)) : 0.00;
+
+            $allowQuotation = $request->has('allow_quotation');
+            $quotationMinQty = $request->input('quotation_min_qty');
+            $rawCustomFields = $request->input('quotation_custom_fields', []);
+            $cleanedCustomFields = is_array($rawCustomFields) ? array_values(array_filter(array_map('trim', $rawCustomFields))) : [];
+            $quotationNotes = $request->input('quotation_notes');
+            $quotationAttachmentsAllowed = $request->has('quotation_attachments_allowed');
+
             $product->update([
                 'category_id' => $validated['category_id'],
                 'brand_id' => $validated['brand_id'] ?? null,
@@ -375,6 +441,19 @@ class ProductController extends Controller
                 'free_shipping' => $request->has('free_shipping'),
                 'shipping_charges' => $request->input('shipping_charges', 0.00),
                 'cod_available' => $request->has('cod_available'),
+                'has_sample' => $hasSample,
+                'sample_type' => $sampleType,
+                'sample_price' => $samplePrice,
+                'sample_shipping_fee' => $sampleShipping,
+                'sample_max_qty' => $request->input('sample_max_qty', 1),
+                'sample_unit_description' => $request->input('sample_unit_description'),
+                'sample_instructions' => $request->input('sample_instructions'),
+                'sample_stock' => $request->input('sample_stock'),
+                'allow_quotation' => $allowQuotation,
+                'quotation_min_qty' => $quotationMinQty ?: null,
+                'quotation_custom_fields' => !empty($cleanedCustomFields) ? json_encode($cleanedCustomFields) : null,
+                'quotation_notes' => $quotationNotes,
+                'quotation_attachments_allowed' => $quotationAttachmentsAllowed,
                 'status' => $validated['status'] ?? $product->status,
             ]);
 
@@ -506,73 +585,85 @@ class ProductController extends Controller
     */
     public function ajaxStoreCategory(Request $request)
     {
+        $vendor = $this->getVendor();
         $request->validate([
             'name' => 'required|string|max:200',
             'parent_id' => 'nullable|exists:categories,id',
-            'commission_rate' => 'nullable|numeric|min:0|max:100',
+            'reason' => 'nullable|string|max:1000',
             'description' => 'nullable|string|max:500',
         ]);
 
-        $baseSlug = Str::slug($request->name);
-        $slug = $baseSlug;
-        $counter = 1;
-        while (Category::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
-        }
+        $isSub = !empty($request->parent_id);
+        $typeName = $isSub ? 'subcategory' : 'category';
 
-        $category = Category::create([
+        $catalogReq = CatalogRequest::create([
+            'vendor_id' => $vendor->id,
+            'type'      => $typeName,
+            'name'      => trim($request->name),
             'parent_id' => $request->parent_id ?: null,
-            'name' => $request->name,
-            'slug' => $slug,
-            'description' => $request->description,
-            'commission_rate' => $request->commission_rate ?? 5.00,
-            'status' => 'active',
-            'show_in_menu' => true,
+            'reason'    => $request->reason ?: ($request->description ?: 'Vendor requested category addition from product editor.'),
+            'status'    => 'pending',
         ]);
+
+        try {
+            AdminNotificationService::send(
+                'catalog_request',
+                'New Category Request from ' . ($vendor->company_name ?? $vendor->name),
+                "Vendor requested new " . ($isSub ? 'Subcategory' : 'Main Category') . ": '{$request->name}' for Admin review.",
+                route('admin.catalog-requests.index', ['type' => 'category', 'status' => 'pending']),
+                'bi-diagram-3'
+            );
+        } catch (\Throwable $e) {}
 
         return response()->json([
             'success' => true,
-            'message' => 'Category created successfully!',
-            'category' => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'parent_id' => $category->parent_id,
-            ]
+            'is_request' => true,
+            'message' => "Category request for '{$request->name}' submitted to Admin! Once verified by Super Admin, it will be added to the marketplace catalog and appear in this dropdown.",
+            'request_id' => $catalogReq->id,
+            'request_name' => $request->name,
         ]);
     }
 
     public function ajaxStoreBrand(Request $request)
     {
+        $vendor = $this->getVendor();
         $request->validate([
             'name' => 'required|string|max:200',
             'country_of_origin' => 'nullable|string|max:100',
             'website' => 'nullable|string|max:300',
+            'reason' => 'nullable|string|max:1000',
             'description' => 'nullable|string|max:500',
         ]);
 
-        $baseSlug = Str::slug($request->name);
-        $slug = $baseSlug;
-        $counter = 1;
-        while (Brand::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
-        }
+        $metaInfo = [];
+        if ($request->country_of_origin) $metaInfo[] = 'Origin: ' . $request->country_of_origin;
+        if ($request->website) $metaInfo[] = 'Website: ' . $request->website;
 
-        $brand = Brand::create([
-            'name' => $request->name,
-            'slug' => $slug,
-            'country_of_origin' => $request->country_of_origin ?? 'India',
-            'website' => $request->website,
-            'description' => $request->description,
-            'status' => 'active',
+        $catalogReq = CatalogRequest::create([
+            'vendor_id' => $vendor->id,
+            'type'      => 'brand',
+            'name'      => trim($request->name),
+            'values'    => implode(' | ', $metaInfo),
+            'reason'    => $request->reason ?: ($request->description ?: 'Vendor requested brand listing for product catalog.'),
+            'status'    => 'pending',
         ]);
+
+        try {
+            AdminNotificationService::send(
+                'catalog_request',
+                'New Brand Request from ' . ($vendor->company_name ?? $vendor->name),
+                "Vendor requested new Brand: '{$request->name}' for Admin review.",
+                route('admin.catalog-requests.index', ['type' => 'brand', 'status' => 'pending']),
+                'bi-patch-check'
+            );
+        } catch (\Throwable $e) {}
 
         return response()->json([
             'success' => true,
-            'message' => 'Brand created successfully!',
-            'brand' => [
-                'id' => $brand->id,
-                'name' => $brand->name,
-            ]
+            'is_request' => true,
+            'message' => "Brand request for '{$request->name}' submitted to Admin! Once verified by Super Admin, it will be added to the marketplace catalog and appear in this dropdown.",
+            'request_id' => $catalogReq->id,
+            'request_name' => $request->name,
         ]);
     }
 
@@ -1175,8 +1266,12 @@ class ProductController extends Controller
     public function brands()
     {
         $vendor = $this->getVendor();
-        $brands = Brand::where('status', 'active')->orderBy('name')->paginate(15);
-        return view('vendor.products.brands', compact('vendor', 'brands'));
+        $brands = Brand::where('status', 'active')->orderBy('name')->paginate(16);
+        $myRequests = CatalogRequest::where('vendor_id', $vendor->id)
+            ->where('type', 'brand')
+            ->latest()
+            ->get();
+        return view('vendor.products.brands', compact('vendor', 'brands', 'myRequests'));
     }
 
     public function categories()
@@ -1184,7 +1279,7 @@ class ProductController extends Controller
         $vendor = $this->getVendor();
         $categories = Category::where('status', 'active')->whereNull('parent_id')->with('children')->orderBy('name')->get();
         $myRequests = CatalogRequest::where('vendor_id', $vendor->id)
-            ->where('type', 'category')
+            ->whereIn('type', ['category', 'subcategory'])
             ->latest()
             ->get();
         return view('vendor.products.categories', compact('vendor', 'categories', 'myRequests'));
@@ -1213,20 +1308,20 @@ class ProductController extends Controller
         $vendor = $this->getVendor();
 
         $request->validate([
-            'type'      => 'required|in:attribute_spec,category',
+            'type'      => 'required|in:attribute_spec,category,subcategory,brand',
             'name'      => 'required|string|max:200',
             'parent_id' => 'nullable|exists:categories,id',
             'values'    => 'nullable|string|max:2000',
-            'reason'    => 'required|string|min:10|max:2000',
+            'reason'    => 'required|string|min:5|max:2000',
         ], [
             'reason.required' => 'A valid reason / justification is required explaining why this item is needed.',
-            'reason.min'      => 'Please provide a clear justification of at least 10 characters.',
+            'reason.min'      => 'Please provide a clear justification of at least 5 characters.',
         ]);
 
-        CatalogRequest::create([
+        $catalogRequest = CatalogRequest::create([
             'vendor_id' => $vendor->id,
             'type'      => $request->type,
-            'name'      => $request->name,
+            'name'      => trim($request->name),
             'parent_id' => $request->parent_id ?: null,
             'values'    => $request->values,
             'reason'    => $request->reason,
@@ -1235,18 +1330,35 @@ class ProductController extends Controller
 
         // Send Notification to Super Admins
         try {
-            $typeName = $request->type === 'attribute_spec' ? 'Specification / Attribute' : 'Material Category';
+            $typeLabels = [
+                'attribute_spec' => 'Specification / Attribute',
+                'category'       => 'Material Category',
+                'subcategory'    => 'Material Subcategory',
+                'brand'          => 'Brand / Manufacturer',
+            ];
+            $typeName = $typeLabels[$request->type] ?? 'Catalog Item';
+
             AdminNotificationService::send(
                 'catalog_request',
-                'New Catalog Request from ' . $vendor->business_name,
+                'New Catalog Request from ' . ($vendor->company_name ?? $vendor->name),
                 "Vendor requested new {$typeName}: '{$request->name}' with reason: " . Str::limit($request->reason, 80),
-                route('admin.catalog-requests.index'),
+                route('admin.catalog-requests.index', ['type' => $request->type, 'status' => 'pending']),
                 'bi-card-checklist'
             );
         } catch (\Throwable $e) {
             // notification fail safe
         }
 
-        return back()->with('success', "Your request for '{$request->name}' has been submitted to the Admin team with your justification. You can track its status below.");
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_request' => true,
+                'message' => "Your request for '{$request->name}' has been submitted to the Super Admin team for verification. Once approved, it will be added to the marketplace catalog.",
+                'request_id' => $catalogRequest->id,
+                'request_name' => $request->name,
+            ]);
+        }
+
+        return back()->with('success', "Your request for '{$request->name}' has been submitted to the Admin team for verification. You can track its status below.");
     }
 }

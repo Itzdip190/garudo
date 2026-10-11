@@ -1,19 +1,22 @@
 @extends('layouts.admin')
 
-@section('title', 'Vendor Catalog Requests')
+@section('title', 'Vendor Catalog & Brand Requests')
 
 @section('content')
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
-        <h1 class="page-header-title">Vendor Catalog Requests</h1>
-        <p class="page-header-subtitle mb-0">Review and approve vendor requests for new standard specifications, material grades, or product categories.</p>
+        <h1 class="page-header-title">Vendor Catalog, Category & Brand Requests</h1>
+        <p class="page-header-subtitle mb-0">Review, verify and approve vendor requests for new brands, product categories, and specifications before they go live.</p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="{{ route('admin.attributes.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-            <i class="bi bi-sliders me-1"></i> Standard Specs
+        <a href="{{ route('admin.brands.registry.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-patch-check me-1"></i> Brand Registry
         </a>
         <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-            <i class="bi bi-diagram-3 me-1"></i> Categories & Tree
+            <i class="bi bi-diagram-3 me-1"></i> Category Tree
+        </a>
+        <a href="{{ route('admin.attributes.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-sliders me-1"></i> Standard Specs
         </a>
     </div>
 </div>
@@ -24,24 +27,31 @@
         <div class="garudo-card p-3">
             <div class="text-warning small fw-bold text-uppercase">Pending Review</div>
             <div class="fs-4 fw-bold text-warning mt-1">{{ $stats['pending'] }}</div>
+            <div class="text-muted small mt-1">
+                <span>{{ $stats['brands_pending'] ?? 0 }} Brands</span> &bull; 
+                <span>{{ $stats['cats_pending'] ?? 0 }} Categories</span>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="garudo-card p-3">
             <div class="text-success small fw-bold text-uppercase">Approved & Added</div>
             <div class="fs-4 fw-bold text-success mt-1">{{ $stats['approved'] }}</div>
+            <div class="text-muted small mt-1">Active in marketplace</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="garudo-card p-3">
             <div class="text-danger small fw-bold text-uppercase">Rejected Requests</div>
             <div class="fs-4 fw-bold text-danger mt-1">{{ $stats['rejected'] }}</div>
+            <div class="text-muted small mt-1">Declined with reasons</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="garudo-card p-3">
             <div class="text-muted small fw-bold text-uppercase">Total Requests</div>
             <div class="fs-4 fw-bold text-dark mt-1">{{ $stats['total'] }}</div>
+            <div class="text-muted small mt-1">All-time submissions</div>
         </div>
     </div>
 </div>
@@ -52,7 +62,7 @@
         <!-- Status Tabs -->
         <ul class="nav nav-pills gap-1">
             <li class="nav-item">
-                <a class="nav-link {{ $statusFilter === 'all' ? 'active bg-primary' : 'text-dark' }} py-1 px-3 small" href="{{ route('admin.catalog-requests.index', ['status' => 'all', 'type' => $typeFilter]) }}">
+                <a class="nav-link {{ $statusFilter === 'all' ? 'active bg-primary text-white' : 'text-dark' }} py-1 px-3 small" href="{{ route('admin.catalog-requests.index', ['status' => 'all', 'type' => $typeFilter]) }}">
                     All ({{ $stats['total'] }})
                 </a>
             </li>
@@ -62,12 +72,12 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ $statusFilter === 'approved' ? 'active bg-success' : 'text-dark' }} py-1 px-3 small" href="{{ route('admin.catalog-requests.index', ['status' => 'approved', 'type' => $typeFilter]) }}">
+                <a class="nav-link {{ $statusFilter === 'approved' ? 'active bg-success text-white' : 'text-dark' }} py-1 px-3 small" href="{{ route('admin.catalog-requests.index', ['status' => 'approved', 'type' => $typeFilter]) }}">
                     Approved ({{ $stats['approved'] }})
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ $statusFilter === 'rejected' ? 'active bg-danger' : 'text-dark' }} py-1 px-3 small" href="{{ route('admin.catalog-requests.index', ['status' => 'rejected', 'type' => $typeFilter]) }}">
+                <a class="nav-link {{ $statusFilter === 'rejected' ? 'active bg-danger text-white' : 'text-dark' }} py-1 px-3 small" href="{{ route('admin.catalog-requests.index', ['status' => 'rejected', 'type' => $typeFilter]) }}">
                     Rejected ({{ $stats['rejected'] }})
                 </a>
             </li>
@@ -76,10 +86,11 @@
         <!-- Type Filter and Search -->
         <form method="GET" action="{{ route('admin.catalog-requests.index') }}" class="d-flex align-items-center gap-2">
             <input type="hidden" name="status" value="{{ $statusFilter }}">
-            <select name="type" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 170px;">
+            <select name="type" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 180px;">
                 <option value="all" {{ $typeFilter === 'all' ? 'selected' : '' }}>All Request Types</option>
+                <option value="brand" {{ $typeFilter === 'brand' ? 'selected' : '' }}>Brands & Manufacturers</option>
+                <option value="category" {{ $typeFilter === 'category' ? 'selected' : '' }}>Categories & Subcategories</option>
                 <option value="attribute_spec" {{ $typeFilter === 'attribute_spec' ? 'selected' : '' }}>Specifications & Specs</option>
-                <option value="category" {{ $typeFilter === 'category' ? 'selected' : '' }}>Categories</option>
             </select>
             <div class="input-group input-group-sm" style="width: 220px;">
                 <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ $search }}">
@@ -100,37 +111,45 @@
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
                     <div class="d-flex align-items-start gap-3 flex-grow-1">
                         <!-- Icon Circle -->
-                        <div class="rounded-3 p-3 text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; background: {{ $req->type === 'attribute_spec' ? '#0B4D3C' : '#0284C7' }};">
-                            <i class="bi {{ $req->type === 'attribute_spec' ? 'bi-sliders' : 'bi-diagram-3' }} fs-4"></i>
+                        @php
+                            $iconBg = match($req->type) {
+                                'brand' => '#2563EB',
+                                'attribute_spec' => '#0B4D3C',
+                                default => '#059669',
+                            };
+                            $iconClass = match($req->type) {
+                                'brand' => 'bi-patch-check',
+                                'attribute_spec' => 'bi-sliders',
+                                'subcategory' => 'bi-diagram-2',
+                                default => 'bi-diagram-3',
+                            };
+                        @endphp
+                        <div class="rounded-3 p-3 text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; background: {{ $iconBg }};">
+                            <i class="bi {{ $iconClass }} fs-4"></i>
                         </div>
 
                         <!-- Details -->
                         <div class="flex-grow-1">
                             <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                                <span class="badge {{ $req->type === 'attribute_spec' ? 'bg-success' : 'bg-info text-dark' }} text-uppercase" style="font-size: 0.7rem;">
-                                    {{ $req->type === 'attribute_spec' ? 'Specification / Attribute' : 'Category' }}
-                                </span>
-                                
-                                @if($req->status === 'pending')
-                                    <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pending Review</span>
-                                @elseif($req->status === 'approved')
-                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Approved & Live</span>
-                                @else
-                                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Rejected</span>
-                                @endif
+                                {!! $req->getTypeBadge() !!}
+                                {!! $req->getStatusBadge() !!}
 
                                 <span class="text-muted small ms-auto">Submitted: {{ $req->created_at->format('d M Y, h:i A') }} ({{ $req->created_at->diffForHumans() }})</span>
                             </div>
 
                             <h5 class="fw-bold text-dark mb-1">{{ $req->name }}</h5>
 
-                            @if($req->parentCategory)
+                            @if($req->type === 'brand')
+                                <div class="text-muted small mb-2">
+                                    <span class="badge bg-light text-dark border me-1"><i class="bi bi-globe me-1"></i>{{ $req->values ?: 'India' }}</span>
+                                </div>
+                            @elseif($req->parentCategory)
                                 <div class="text-muted small mb-2">
                                     <i class="bi bi-diagram-2 me-1"></i>Parent Category: <strong class="text-dark">{{ $req->parentCategory->name }}</strong>
                                 </div>
                             @endif
 
-                            @if($req->values)
+                            @if($req->values && $req->type !== 'brand')
                                 <div class="mb-2">
                                     <span class="text-muted small fw-semibold">Proposed Values / Subcategories:</span>
                                     <div class="d-flex flex-wrap gap-1 mt-1">
@@ -146,7 +165,7 @@
                             <!-- Vendor's Mandatory Reason -->
                             <div class="p-3 bg-light rounded-3 border mt-2">
                                 <div class="d-flex align-items-center gap-2 text-primary fw-bold small mb-1">
-                                    <i class="bi bi-chat-quote-fill fs-6"></i> Vendor's Reason for Request:
+                                    <i class="bi bi-chat-quote-fill fs-6"></i> Vendor's Reason & Specification Details:
                                 </div>
                                 <div class="text-dark small" style="white-space: pre-wrap;">{{ $req->reason }}</div>
                             </div>
@@ -162,8 +181,8 @@
 
                             <!-- Vendor Metadata -->
                             <div class="d-flex align-items-center gap-3 text-muted small mt-3 pt-2 border-top">
-                                <span><i class="bi bi-shop me-1"></i><strong>{{ $req->vendor->business_name ?? 'Unknown Vendor' }}</strong></span>
-                                <span><i class="bi bi-person me-1"></i>{{ $req->vendor->contact_person ?? 'N/A' }}</span>
+                                <span><i class="bi bi-shop me-1"></i><strong>{{ $req->vendor->company_name ?? ($req->vendor->business_name ?? 'Unknown Vendor') }}</strong></span>
+                                <span><i class="bi bi-person me-1"></i>{{ $req->vendor->name ?? ($req->vendor->contact_person ?? 'N/A') }}</span>
                                 <span><i class="bi bi-telephone me-1"></i>{{ $req->vendor->phone ?? 'N/A' }}</span>
                                 <span><i class="bi bi-envelope me-1"></i>{{ $req->vendor->email ?? 'N/A' }}</span>
                             </div>
@@ -193,7 +212,7 @@
             <div class="garudo-card text-center py-5">
                 <i class="bi bi-inbox text-muted fs-1 mb-2 d-block"></i>
                 <h6 class="text-dark">No Vendor Requests Found</h6>
-                <p class="text-muted small">Vendor requests for new specifications or categories will appear here for review.</p>
+                <p class="text-muted small">Vendor requests for new brands, categories or specifications will appear here for review.</p>
             </div>
         </div>
     @endforelse

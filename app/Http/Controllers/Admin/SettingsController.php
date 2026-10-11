@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\HomepageSetting;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -22,7 +23,16 @@ class SettingsController extends Controller
             'app_debug' => env('APP_DEBUG', true),
         ];
 
-        return view('admin.settings.index', compact('settings'));
+        $launchSettings = [
+            'launch_mode_active'     => HomepageSetting::get('launch_mode_active', '1'),
+            'launch_date'            => HomepageSetting::get('launch_date', '20th October'),
+            'launch_strip_text'      => HomepageSetting::get('launch_strip_text', 'Official Launching on 20th October | Pre-Launch Preview'),
+            'launch_notice_message'  => HomepageSetting::get('launch_notice_message', 'Official Launching on 20th October. Direct order purchasing will start on our official launch day!'),
+            'header_tagline'         => HomepageSetting::get('header_tagline', "India's Leading B2B Commerce & Wholesale Network"),
+            'header_tagline_mobile'  => HomepageSetting::get('header_tagline_mobile', "India's #1 B2B Commerce & Wholesale Network"),
+        ];
+
+        return view('admin.settings.index', compact('settings', 'launchSettings'));
     }
 
     public function update(Request $request)
@@ -34,6 +44,26 @@ class SettingsController extends Controller
             'support_email' => 'required|email',
             'support_phone' => 'required|string',
         ]);
+
+        // Save Launch & Tagline Settings if present
+        if ($request->has('has_launch_settings')) {
+            HomepageSetting::set('launch_mode_active', $request->has('launch_mode_active') ? '1' : '0');
+            if ($request->filled('launch_date')) {
+                HomepageSetting::set('launch_date', $request->input('launch_date'));
+            }
+            if ($request->filled('launch_strip_text')) {
+                HomepageSetting::set('launch_strip_text', $request->input('launch_strip_text'));
+            }
+            if ($request->filled('launch_notice_message')) {
+                HomepageSetting::set('launch_notice_message', $request->input('launch_notice_message'));
+            }
+            if ($request->filled('header_tagline')) {
+                HomepageSetting::set('header_tagline', $request->input('header_tagline'));
+            }
+            if ($request->filled('header_tagline_mobile')) {
+                HomepageSetting::set('header_tagline_mobile', $request->input('header_tagline_mobile'));
+            }
+        }
 
         $envPath = base_path('.env');
         if (file_exists($envPath)) {

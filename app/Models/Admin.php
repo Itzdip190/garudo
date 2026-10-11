@@ -41,9 +41,19 @@ class Admin extends Authenticatable
         return $this->belongsToMany(Role::class, 'admin_roles');
     }
 
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'admin_permissions');
+    }
+
     // ---------------------------------------------------------------
     // RBAC Helpers
     // ---------------------------------------------------------------
+
+    public function isSuperAdmin(): bool
+    {
+        return (bool) $this->is_super_admin;
+    }
 
     public function hasRole(string $role): bool
     {
@@ -60,9 +70,31 @@ class Admin extends Authenticatable
             return true;
         }
 
-        return $this->roles()
-            ->whereHas('permissions', fn ($q) => $q->where('name', $permission))
-            ->exists();
+        // 1. Direct assigned permissions
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('admin_permissions')) {
+                if ($this->relationLoaded('permissions')) {
+                    if ($this->permissions->contains('name', $permission)) {
+                        return true;
+                    }
+                } else {
+                    if ($this->permissions()->where('name', $permission)->exists()) {
+                        return true;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore error if table not yet migrated
+        }
+
+        // 2. Role-based permissions
+        try {
+            return $this->roles()
+                ->whereHas('permissions', fn ($q) => $q->where('name', $permission))
+                ->exists();
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function getAllPermissions(): \Illuminate\Support\Collection
@@ -71,7 +103,38 @@ class Admin extends Authenticatable
             return Permission::all();
         }
 
-        return $this->roles->flatMap->permissions->unique('id');
+        $rolePerms = collect();
+        try {
+            $rolePerms = $this->roles->flatMap->permissions;
+        } catch (\Throwable $e) {}
+
+        $directPerms = collect();
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('admin_permissions')) {
+                $directPerms = $this->permissions;
+            }
+        } catch (\Throwable $e) {}
+
+        return $rolePerms->merge($directPerms)->unique('id');
+    }
+
+    public function getRoleDisplayNameAttribute(): string
+    {
+        if ($this->is_super_admin) {
+            return 'Super Administrator';
+        }
+
+        $role = $this->roles->first();
+        if ($role) {
+            return $role->display_name ?? $role->name;
+        }
+
+        $permCount = $this->getAllPermissions()->count();
+        if ($permCount > 0) {
+            return 'Custom Subadmin (' . $permCount . ' perms)';
+        }
+
+        return 'Subadmin / Staff';
     }
 
     // ---------------------------------------------------------------
@@ -81,5 +144,10 @@ class Admin extends Authenticatable
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    public function scopeSubadmins($query)
+    {
+        return $query->where('is_super_admin', false);
     }
 }

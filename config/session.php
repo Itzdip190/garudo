@@ -156,7 +156,17 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => (function () {
+        $domain = env('SESSION_DOMAIN');
+        if (empty($domain)) {
+            return null;
+        }
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        if (str_contains($host, 'localhost') || str_contains($host, '127.0.0.1')) {
+            return null;
+        }
+        return $domain;
+    })(),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +179,17 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => (function () {
+        $secure = env('SESSION_SECURE_COOKIE');
+        if ($secure === false || $secure === 'false') {
+            return false;
+        }
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        if (str_contains($host, 'localhost') || str_contains($host, '127.0.0.1')) {
+            return false;
+        }
+        return (bool) ($secure ?? (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'));
+    })(),
 
     /*
     |--------------------------------------------------------------------------

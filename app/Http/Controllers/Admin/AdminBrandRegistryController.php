@@ -109,6 +109,8 @@ class AdminBrandRegistryController extends Controller
 
             $brand->name                = $application->brand_name;
             $brand->slug                = $slug;
+            $brand->parent_id           = $application->parent_brand_id ?? $brand->parent_id;
+            $brand->brand_tier          = $application->brand_tier ?? ($brand->parent_id ? 'sub_brand' : 'super_brand');
             $brand->owner_vendor_id     = $application->vendor_id;
             $brand->brand_type          = $application->brand_type ?? 'oem_manufacturer';
             $brand->logo                = $application->logo_path ?? $brand->logo;

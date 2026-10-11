@@ -342,6 +342,58 @@ class VendorNotificationService
     }
 
     /**
+     * Send new sample request notification to vendor
+     */
+    public static function sendSampleRequestNotification($sampleRequest)
+    {
+        $productName = $sampleRequest->product ? $sampleRequest->product->name : 'Product';
+        $buyerName = $sampleRequest->buyer_name ?? 'Buyer';
+        $typeLabel = match($sampleRequest->sample_type) {
+            'free' => 'Free Sample',
+            'paid' => 'Paid Sample (₹' . number_format($sampleRequest->sample_price, 2) . ')',
+            'partial_paid' => 'Partial Paid (Shipping ₹' . number_format($sampleRequest->sample_shipping_fee, 2) . ')',
+            default => 'Sample',
+        };
+
+        $title = "📦 New {$typeLabel} Request: #{$sampleRequest->request_number}";
+        $message = "Buyer '{$buyerName}' has requested a sample for '{$productName}'. Please review and prepare dispatch.";
+        $link = route('vendor.samples.show', $sampleRequest->id);
+
+        self::send($sampleRequest->vendor_id, 'sample_request', $title, $message, $link, 'bi-box-seam-fill');
+    }
+
+    /**
+     * Send new quotation (RFQ) request notification to vendor
+     */
+    public static function sendQuotationRequestNotification($quotation)
+    {
+        $productName = $quotation->product ? $quotation->product->name : 'Material Specification';
+        $buyerName = $quotation->buyer_name ?? ($quotation->company_name ?? 'Buyer');
+        $qty = $quotation->quantity . ' ' . ($quotation->unit ?? 'Units');
+
+        $title = "📋 New RFQ / Quotation Request: #{$quotation->quotation_number}";
+        $message = "Buyer '{$buyerName}' requested custom price quote for '{$productName}' (Qty: {$qty}). Review and send proposal.";
+        $link = route('vendor.quotations.show', $quotation->id);
+
+        self::send($quotation->vendor_id, 'quotation_request', $title, $message, $link, 'bi-file-earmark-text-fill text-primary');
+    }
+
+    /**
+     * Send quote accepted notification to vendor
+     */
+    public static function sendQuotationAcceptedNotification($quotation)
+    {
+        $productName = $quotation->product ? $quotation->product->name : 'Material';
+        $buyerName = $quotation->buyer_name ?? 'Buyer';
+
+        $title = "🎉 Quote Accepted: #{$quotation->quotation_number}";
+        $message = "Buyer '{$buyerName}' accepted your price proposal for '{$productName}' (Total ₹" . number_format($quotation->total_amount, 2) . "). Convert to bulk order.";
+        $link = route('vendor.quotations.show', $quotation->id);
+
+        self::send($quotation->vendor_id, 'quotation_accepted', $title, $message, $link, 'bi-patch-check-fill text-success');
+    }
+
+    /**
      * Get unread messages count for vendor (Strict DB count, returns 0 if all read)
      */
     public static function getUnreadMessagesCount(Vendor $vendor)
@@ -355,4 +407,5 @@ class VendorNotificationService
         return 0;
     }
 }
+
 

@@ -17,20 +17,8 @@
                 </button>
 
                 <div class="d-flex flex-column">
-                    <a href="{{ route('vendor.dashboard') }}" class="brand-logo-wrap">
-                        <div class="brand-logo-icon">
-                            <!-- Wings Graphic SVG matching Garudo Logo -->
-                            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M6 14C14 14 20 18 22 24C16 23 10 20 6 14Z" fill="#0B4D3C"/>
-                                <path d="M8 20C16 20 22 24 24 30C18 29 12 26 8 20Z" fill="#0B4D3C"/>
-                                <path d="M12 26C18 26 24 29 26 35C20 34 15 31 12 26Z" fill="#0B4D3C"/>
-                                <path d="M22 24C26 16 34 12 42 12C36 18 30 22 24 30C23 27 22 25 22 24Z" fill="#0B4D3C"/>
-                            </svg>
-                        </div>
-                        <div class="brand-text-block">
-                            <span class="brand-name">GARUDO</span>
-                            <span class="brand-tagline">BUILD BETTER. TOGETHER.</span>
-                        </div>
+                    <a href="{{ route('vendor.dashboard') }}" class="brand-logo-wrap text-decoration-none" title="Garudo Vendor Dashboard">
+                        <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 44px; max-height: 48px; width: auto; object-fit: contain;">
                     </a>
                     <span class="vendor-badge-pill align-self-start mt-1">Vendor Panel</span>
                 </div>

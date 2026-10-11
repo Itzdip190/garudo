@@ -13,6 +13,12 @@
             </a>
         </li>
         <li>
+            <a href="{{ route('customer.samples.index') }}" class="sidebar-item-link {{ request()->routeIs('customer.samples*') ? 'active' : '' }}">
+                <i class="bi bi-box2-heart{{ request()->routeIs('customer.samples*') ? '-fill' : '' }}"></i>
+                <span>My Samples</span>
+            </a>
+        </li>
+        <li>
             <a href="{{ route('customer.quotes') }}" class="sidebar-item-link {{ request()->routeIs('customer.quotes*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text{{ request()->routeIs('customer.quotes*') ? '-fill' : '' }}"></i>
                 <span>My Quotes</span>

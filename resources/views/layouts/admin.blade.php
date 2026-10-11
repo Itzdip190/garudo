@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Super Admin Command Center') - GARUDO B2B</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -453,17 +454,19 @@
 
     <!-- ---------------- SIDEBAR NAVIGATION ---------------- -->
     <aside class="admin-sidebar" id="adminSidebar">
-        <a href="{{ route('admin.dashboard') }}" class="sidebar-brand-box">
-            <div class="sidebar-brand-icon">
-                <i class="bi bi-shield-lock-fill"></i>
-            </div>
-            <div class="sidebar-brand-text">
-                <h4>GARUDO</h4>
-                <span>Super Administrator</span>
+        <a href="{{ route('admin.dashboard') }}" class="sidebar-brand-box flex-column align-items-start py-3 text-decoration-none" title="Garudo Super Admin">
+            <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 38px; width: auto; max-width: 100%; object-fit: contain;">
+            <div class="sidebar-brand-text mt-1.5">
+                <span>{{ auth('admin')->user()?->is_super_admin ? 'Super Administrator' : (auth('admin')->user()?->role_display_name ?? 'Subadmin / Staff') }}</span>
             </div>
         </a>
 
+        @php
+            $currentAdmin = auth('admin')->user();
+        @endphp
+
         <div class="sidebar-nav">
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('dashboard.view'))
             <div class="nav-section-title">Core Command</div>
             
             <a href="{{ route('admin.dashboard') }}" class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -472,9 +475,11 @@
                     <span>Command Center</span>
                 </div>
             </a>
+            @endif
 
             <div class="nav-section-title">Marketplace Entities</div>
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('vendors.view'))
             <a href="{{ route('admin.vendors.index') }}" class="admin-nav-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-shop-window"></i>
@@ -487,14 +492,18 @@
                     <span class="badge-nav-counter bg-warning text-dark">{{ $pendingVendorsCount }}</span>
                 @endif
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('customers.view'))
             <a href="{{ route('admin.customers.index') }}" class="admin-nav-link {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-people-fill"></i>
                     <span>Buyers / Customers</span>
                 </div>
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('products.view'))
             <a href="{{ route('admin.products.index') }}" class="admin-nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-box-seam-fill"></i>
@@ -507,11 +516,29 @@
                     <span class="badge-nav-counter bg-danger text-white">{{ $pendingProductsCount }}</span>
                 @endif
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('categories.view'))
             <a href="{{ route('admin.categories.index') }}" class="admin-nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-diagram-3-fill"></i>
                     <span>Categories & Tree</span>
+                </div>
+            </a>
+            @endif
+
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('brands.view'))
+            <a href="{{ route('admin.brands.index') }}" class="admin-nav-link {{ request()->routeIs('admin.brands.index', 'admin.brands.create', 'admin.brands.edit') ? 'active' : '' }}">
+                <div class="link-left">
+                    <i class="bi bi-patch-check-fill text-success"></i>
+                    <span>Brand Master</span>
+                </div>
+            </a>
+
+            <a href="{{ route('admin.brand-titles.index') }}" class="admin-nav-link {{ request()->routeIs('admin.brand-titles.*') ? 'active' : '' }}">
+                <div class="link-left">
+                    <i class="bi bi-tags-fill text-primary"></i>
+                    <span>Brand Titles & Tiers</span>
                 </div>
             </a>
 
@@ -529,7 +556,9 @@
                     <span class="badge-nav-counter bg-warning text-dark">{{ $pendingBrandApps }}</span>
                 @endif
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('dealers.view'))
             <a href="{{ route('admin.dealer-authorizations.index') }}" class="admin-nav-link {{ request()->routeIs('admin.dealer-authorizations.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-patch-check-fill text-success"></i>
@@ -544,18 +573,22 @@
                     <span class="badge-nav-counter bg-warning text-dark">{{ $pendingDealerAuths }}</span>
                 @endif
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('attributes.view'))
             <a href="{{ route('admin.attributes.index') }}" class="admin-nav-link {{ request()->routeIs('admin.attributes.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-sliders"></i>
                     <span>Attributes & Specs</span>
                 </div>
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('catalog_requests.view'))
             <a href="{{ route('admin.catalog-requests.index') }}" class="admin-nav-link {{ request()->routeIs('admin.catalog-requests.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-inbox-fill"></i>
-                    <span>Catalog Requests</span>
+                    <span>Catalog & Brand Requests</span>
                 </div>
                 @php
                     $pendingCatalogRequests = \Illuminate\Support\Facades\Schema::hasTable('catalog_requests')
@@ -566,23 +599,63 @@
                     <span class="badge-nav-counter bg-warning text-dark">{{ $pendingCatalogRequests }}</span>
                 @endif
             </a>
+            @endif
 
             <div class="nav-section-title">Operations & Supply</div>
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('orders.view'))
             <a href="{{ route('admin.orders.index') }}" class="admin-nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-receipt-cutoff"></i>
                     <span>B2B Orders</span>
                 </div>
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('quotations.view'))
+            <a href="{{ route('admin.quotations.index') }}" class="admin-nav-link {{ request()->routeIs('admin.quotations.*') ? 'active' : '' }}">
+                <div class="link-left">
+                    <i class="bi bi-file-earmark-ruled-fill text-info"></i>
+                    <span>Quotations & RFQs</span>
+                </div>
+                @php
+                    $pendingAdminQuotes = \Illuminate\Support\Facades\Schema::hasTable('quotations')
+                        ? \App\Models\Quotation::whereIn('status', ['pending', 'new'])->count()
+                        : 0;
+                @endphp
+                @if($pendingAdminQuotes > 0)
+                    <span class="badge-nav-counter bg-primary text-white">{{ $pendingAdminQuotes }}</span>
+                @endif
+            </a>
+            @endif
+
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('samples.view'))
+            <a href="{{ route('admin.samples.index') }}" class="admin-nav-link {{ request()->routeIs('admin.samples.*') ? 'active' : '' }}">
+                <div class="link-left">
+                    <i class="bi bi-box2-heart-fill text-success"></i>
+                    <span>Product Samples & Trials</span>
+                </div>
+                @php
+                    $pendingAdminSamples = \Illuminate\Support\Facades\Schema::hasTable('sample_requests')
+                        ? \App\Models\SampleRequest::where('status', 'pending')->count()
+                        : 0;
+                @endphp
+                @if($pendingAdminSamples > 0)
+                    <span class="badge-nav-counter bg-warning text-dark">{{ $pendingAdminSamples }}</span>
+                @endif
+            </a>
+            @endif
+
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('logistics.view'))
             <a href="{{ route('admin.logistics.index') }}" class="admin-nav-link {{ request()->routeIs('admin.logistics.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-truck"></i>
                     <span>Logistics & Fleet</span>
                 </div>
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('marketing.view'))
             <a href="{{ route('admin.marketing.campaigns') }}" class="admin-nav-link {{ request()->routeIs('admin.marketing.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-rocket-takeoff-fill text-warning"></i>
@@ -597,7 +670,9 @@
                     <span class="badge-nav-counter bg-warning text-dark">{{ $pendingBoostsCount }}</span>
                 @endif
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('subscriptions.view'))
             <div class="nav-section-title">Subscriptions & Tiers</div>
 
             <a href="{{ route('admin.subscriptions.index') }}" class="admin-nav-link {{ request()->routeIs('admin.subscriptions.index') ? 'active' : '' }}">
@@ -621,9 +696,11 @@
                     <span>Manage Pricing Plans</span>
                 </div>
             </a>
+            @endif
 
             <div class="nav-section-title">Platform Controls</div>
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('password_requests.view'))
             <a href="{{ route('admin.password-requests.index') }}" class="admin-nav-link {{ request()->routeIs('admin.password-requests.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-key-fill"></i>
@@ -638,7 +715,9 @@
                     <span class="badge-nav-counter bg-warning text-dark">{{ $pendingPwCount }}</span>
                 @endif
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('notifications.view'))
             <a href="{{ route('admin.notifications.index') }}" class="admin-nav-link {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-bell-fill"></i>
@@ -651,13 +730,41 @@
                     <span class="badge-nav-counter bg-danger text-white">{{ $unreadNotifCount }}</span>
                 @endif
             </a>
+            @endif
 
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('homepage.view'))
+            <a href="{{ route('admin.homepage.index') }}" class="admin-nav-link {{ request()->routeIs('admin.homepage.*') ? 'active' : '' }}">
+                <div class="link-left">
+                    <i class="bi bi-layout-text-window-reverse text-warning"></i>
+                    <span>Homepage Control</span>
+                </div>
+                <span class="badge-nav-counter bg-warning text-dark">Live</span>
+            </a>
+            @endif
+
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('subadmins.view'))
+            <a href="{{ route('admin.subadmins.index') }}" class="admin-nav-link {{ request()->routeIs('admin.subadmins.*') ? 'active' : '' }}">
+                <div class="link-left">
+                    <i class="bi bi-shield-lock-fill text-success"></i>
+                    <span>Subadmins & Staff</span>
+                </div>
+                @php
+                    $staffBadgeCount = \App\Models\Admin::where('is_super_admin', false)->count();
+                @endphp
+                @if($staffBadgeCount > 0)
+                    <span class="badge-nav-counter bg-success text-white">{{ $staffBadgeCount }}</span>
+                @endif
+            </a>
+            @endif
+
+            @if(!$currentAdmin || $currentAdmin->is_super_admin || $currentAdmin->hasPermission('settings.view'))
             <a href="{{ route('admin.settings.index') }}" class="admin-nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                 <div class="link-left">
                     <i class="bi bi-sliders2"></i>
                     <span>Platform Settings</span>
                 </div>
             </a>
+            @endif
 
             <a href="{{ url('/') }}" target="_blank" class="admin-nav-link">
                 <div class="link-left">
@@ -672,9 +779,11 @@
                 <div class="admin-user-avatar">
                     <i class="bi bi-person-fill"></i>
                 </div>
-                <div>
-                    <div class="fw-bold text-white small">{{ auth('admin')->user()->name ?? 'Super Admin' }}</div>
-                    <div class="text-white-50" style="font-size: 0.7rem;">Root Administrator</div>
+                <div class="overflow-hidden">
+                    <div class="fw-bold text-white small text-truncate" style="max-width: 155px;">{{ auth('admin')->user()->name ?? 'Super Admin' }}</div>
+                    <div class="text-white-50 text-truncate" style="font-size: 0.7rem; max-width: 155px;">
+                        {{ auth('admin')->user()?->is_super_admin ? 'Root Administrator' : (auth('admin')->user()?->role_display_name ?? 'Subadmin / Staff') }}
+                    </div>
                 </div>
             </div>
             <form action="{{ route('admin.logout') }}" method="POST" class="m-0">

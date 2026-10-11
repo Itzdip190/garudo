@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Category;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,6 +24,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS in production or if app URL is configured with https
+        if ($this->app->environment('production') || str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         Event::listen(
             \App\Events\VendorVerifiedEvent::class,
             \App\Listeners\GenerateVendorCertificateListener::class
@@ -136,7 +142,17 @@ class AppServiceProvider extends ServiceProvider
                 $headerCategories = collect();
             }
 
-            $view->with('headerCategories', $headerCategories);
+            $launchSettings = [
+                'launch_mode_active'     => \App\Models\HomepageSetting::get('launch_mode_active', '1'),
+                'launch_date'            => \App\Models\HomepageSetting::get('launch_date', '20th October'),
+                'launch_strip_text'      => \App\Models\HomepageSetting::get('launch_strip_text', 'Official Launching on 20th October | Pre-Launch Preview Active'),
+                'launch_notice_message'  => \App\Models\HomepageSetting::get('launch_notice_message', 'Official Launching on 20th October. Direct order purchasing will start on our official launch day!'),
+                'header_tagline'         => \App\Models\HomepageSetting::get('header_tagline', "India's Leading B2B Commerce & Wholesale Network"),
+                'header_tagline_mobile'  => \App\Models\HomepageSetting::get('header_tagline_mobile', "India's #1 B2B Commerce & Wholesale Network"),
+            ];
+
+            $view->with('headerCategories', $headerCategories)
+                 ->with('launchSettings', $launchSettings);
         });
     }
 }

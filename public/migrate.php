@@ -30,9 +30,8 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 try {
-    // 1. Run Migration and Seeders
-    \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
-        '--seed' => true,
+    // 1. Run Safe Migration (Never drop tables in production)
+    \Illuminate\Support\Facades\Artisan::call('migrate', [
         '--force' => true,
     ]);
     $migrateOutput = \Illuminate\Support\Facades\Artisan::output();

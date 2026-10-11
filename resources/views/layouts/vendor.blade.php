@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Vendor Dashboard') - GARUDO B2B</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -595,7 +596,9 @@
     <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileVendorSidebar" aria-labelledby="mobileVendorSidebarLabel" style="width: 280px;">
         <div class="offcanvas-header border-bottom">
             <div class="d-flex align-items-center gap-2">
-                <span class="brand-name" style="font-size: 1.2rem;">GARUDO</span>
+                <a href="{{ route('home') }}" class="d-inline-flex align-items-center text-decoration-none">
+                    <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 32px; max-height: 34px; width: auto; object-fit: contain;">
+                </a>
                 <span class="vendor-badge-pill ms-2">Vendor Panel</span>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>

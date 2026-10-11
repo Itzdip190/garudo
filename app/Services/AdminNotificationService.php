@@ -188,6 +188,71 @@ class AdminNotificationService
             ]);
         }
 
+        // 4. Sample Requests
+        if (Schema::hasTable('sample_requests')) {
+            $samples = \App\Models\SampleRequest::with(['vendor', 'product'])->latest()->take(3)->get();
+            foreach ($samples as $smp) {
+                $feed->push((object) [
+                    'id' => 'smp_' . $smp->id,
+                    'type' => 'sample',
+                    'title' => 'Sample Request: #' . $smp->request_number,
+                    'message' => ($smp->buyer_name ?? 'Buyer') . ' requested sample of ' . Str::limit($smp->product?->name ?? 'Material', 20),
+                    'link' => route('admin.samples.show', $smp->id),
+                    'icon' => 'bi-box-seam text-info',
+                    'read_at' => null,
+                    'created_at' => $smp->created_at,
+                ]);
+            }
+        }
+
         return $feed->sortByDesc('created_at')->take($limit)->values();
     }
+
+    /**
+     * Send sample request alert to all admins
+     */
+    public static function sendSampleRequestNotification($sampleRequest)
+    {
+        $productName = $sampleRequest->product ? $sampleRequest->product->name : 'Product';
+        $vendorName = $sampleRequest->vendor ? $sampleRequest->vendor->company_name : 'Vendor';
+        $title = "🧪 New Sample Request: #{$sampleRequest->request_number}";
+        $message = "Buyer '{$sampleRequest->buyer_name}' requested sample for '{$productName}' from '{$vendorName}'.";
+        $link = route('admin.samples.show', $sampleRequest->id);
+
+        self::send('sample_request', $title, $message, $link, 'bi-box2-heart-fill text-success');
+    }
+
+    /**
+     * Send quotation request (RFQ) alert to all admins
+     */
+    public static function sendQuotationRequestNotification($quotation)
+    {
+        $productName = $quotation->product ? $quotation->product->name : 'Material';
+        $vendorName = $quotation->vendor ? $quotation->vendor->company_name : 'Vendor';
+        $buyerName = $quotation->buyer_name ?? ($quotation->company_name ?? 'Buyer');
+        $qty = $quotation->quantity . ' ' . ($quotation->unit ?? 'Units');
+
+        $title = "📋 New RFQ Submitted: #{$quotation->quotation_number}";
+        $message = "Buyer '{$buyerName}' requested quote for '{$productName}' (Qty: {$qty}) from '{$vendorName}'.";
+        $link = route('admin.quotations.show', $quotation->id);
+
+        self::send('quotation_request', $title, $message, $link, 'bi-file-earmark-text-fill text-primary');
+    }
+
+    /**
+     * Send quote proposal sent alert to all admins
+     */
+    public static function sendQuotationQuotedNotification($quotation)
+    {
+        $productName = $quotation->product ? $quotation->product->name : 'Material';
+        $vendorName = $quotation->vendor ? $quotation->vendor->company_name : 'Vendor';
+        $total = number_format($quotation->total_amount, 2);
+
+        $title = "💰 Quote Proposal Sent: #{$quotation->quotation_number}";
+        $message = "Vendor '{$vendorName}' sent price proposal of ₹{$total} for '{$productName}'.";
+        $link = route('admin.quotations.show', $quotation->id);
+
+        self::send('quotation_quoted', $title, $message, $link, 'bi-currency-rupee text-success');
+    }
 }
+

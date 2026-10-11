@@ -1,5 +1,30 @@
+# Disable directory browsing
+Options -Indexes
+
+# Protect sensitive files from direct web access
+<FilesMatch "(^\.env|composer\.(json|lock)|package\.(json|lock)|debug\.php|\.git)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevent access to hidden files/folders (starting with a dot)
+<Files ".*">
+    Order allow,deny
+    Deny from all
+</Files>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Pass Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Block direct requests to .env, storage, vendor, tests
+    RewriteRule ^(\.env|storage/logs/|vendor/|tests/|bootstrap/cache/) - [F,L,NC]
+
+    # Rewrite all traffic to public directory
     RewriteRule ^$ public/ [L]
     RewriteRule (.*) public/$1 [L]
 </IfModule>
+

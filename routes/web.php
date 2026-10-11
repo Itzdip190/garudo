@@ -6,13 +6,119 @@ use App\Http\Controllers\Frontend\ProductController as FrontendProductController
 
 /*
 |--------------------------------------------------------------------------
+| Subdomain Portal Routing (Registered FIRST to prevent catch-all match)
+|--------------------------------------------------------------------------
+*/
+
+// Subdomain static image server closure
+$serveStaticImage = function ($file) {
+    $path = public_path('images/' . $file);
+    if (!file_exists($path)) {
+        $path = base_path('images/' . $file);
+    }
+    if (file_exists($path) && !is_dir($path)) {
+        $mime = mime_content_type($path) ?: 'image/png';
+        return response()->file($path, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'public, max-age=86400, must-revalidate',
+        ]);
+    }
+    abort(404);
+};
+
+// Admin Subdomain: admin.garudo.in
+Route::domain('admin.garudo.in')->group(function () use ($serveStaticImage) {
+    Route::get('/images/{file}', $serveStaticImage)->where('file', '.*');
+    Route::get('/favicon.ico', function () {
+        $p = public_path('favicon.ico');
+        return file_exists($p) ? response()->file($p, ['Content-Type' => 'image/x-icon']) : abort(404);
+    });
+    Route::get('/', function () {
+        return auth('admin')->check()
+            ? redirect('/dashboard')
+            : app(App\Http\Controllers\Auth\Admin\LoginController::class)->showLoginForm();
+    });
+    Route::get('/login', [App\Http\Controllers\Auth\Admin\LoginController::class, 'showLoginForm']);
+    Route::post('/login', [App\Http\Controllers\Auth\Admin\LoginController::class, 'login']);
+    Route::post('/logout', [App\Http\Controllers\Auth\Admin\LoginController::class, 'logout']);
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->middleware('admin.auth');
+    Route::fallback(function () {
+        return auth('admin')->check()
+            ? redirect('/dashboard')
+            : app(App\Http\Controllers\Auth\Admin\LoginController::class)->showLoginForm();
+    });
+});
+
+// Customer Subdomain: customer.garudo.in
+Route::domain('customer.garudo.in')->group(function () use ($serveStaticImage) {
+    Route::get('/images/{file}', $serveStaticImage)->where('file', '.*');
+    Route::get('/favicon.ico', function () {
+        $p = public_path('favicon.ico');
+        return file_exists($p) ? response()->file($p, ['Content-Type' => 'image/x-icon']) : abort(404);
+    });
+    Route::get('/', function () {
+        return auth('customer')->check()
+            ? redirect('/dashboard')
+            : app(App\Http\Controllers\Auth\Customer\LoginController::class)->showLoginForm();
+    });
+    Route::get('/login', [App\Http\Controllers\Auth\Customer\LoginController::class, 'showLoginForm']);
+    Route::post('/login', [App\Http\Controllers\Auth\Customer\LoginController::class, 'login']);
+    Route::get('/register', [App\Http\Controllers\Auth\Customer\RegisterController::class, 'showRegisterForm']);
+    Route::get('/signup', [App\Http\Controllers\Auth\Customer\RegisterController::class, 'showRegisterForm']);
+    Route::post('/register', [App\Http\Controllers\Auth\Customer\RegisterController::class, 'register']);
+    Route::post('/logout', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'logout']);
+    Route::get('/dashboard', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'index'])->middleware('auth:customer');
+    Route::fallback(function () {
+        return auth('customer')->check()
+            ? redirect('/dashboard')
+            : app(App\Http\Controllers\Auth\Customer\LoginController::class)->showLoginForm();
+    });
+});
+
+// Seller Subdomains: seller.garudo.in & vendor.garudo.in
+foreach (['seller.garudo.in', 'vendor.garudo.in'] as $sellerDomain) {
+    Route::domain($sellerDomain)->group(function () use ($serveStaticImage) {
+        Route::get('/images/{file}', $serveStaticImage)->where('file', '.*');
+        Route::get('/favicon.ico', function () {
+            $p = public_path('favicon.ico');
+            return file_exists($p) ? response()->file($p, ['Content-Type' => 'image/x-icon']) : abort(404);
+        });
+        Route::get('/', function () {
+            return auth('vendor')->check()
+                ? redirect('/dashboard')
+                : app(App\Http\Controllers\Auth\Vendor\LoginController::class)->showLoginForm();
+        });
+        Route::get('/login', [App\Http\Controllers\Auth\Vendor\LoginController::class, 'showLoginForm']);
+        Route::post('/login', [App\Http\Controllers\Auth\Vendor\LoginController::class, 'login']);
+        Route::get('/register', [App\Http\Controllers\Auth\Vendor\RegisterController::class, 'showRegisterForm']);
+        Route::get('/signup', [App\Http\Controllers\Auth\Vendor\RegisterController::class, 'showRegisterForm']);
+        Route::post('/register', [App\Http\Controllers\Auth\Vendor\RegisterController::class, 'register']);
+        Route::post('/logout', [App\Http\Controllers\Auth\Vendor\LoginController::class, 'logout']);
+        Route::get('/dashboard', [App\Http\Controllers\Vendor\DashboardController::class, 'index'])->middleware('vendor.auth');
+        Route::fallback(function () {
+            return auth('vendor')->check()
+                ? redirect('/dashboard')
+                : app(App\Http\Controllers\Auth\Vendor\LoginController::class)->showLoginForm();
+        });
+    });
+}
+
+/*
+|--------------------------------------------------------------------------
 | Public Web Routes
 |--------------------------------------------------------------------------
 */
 
+Route::get('/images/{file}', $serveStaticImage)->where('file', '.*');
+Route::get('/favicon.ico', function () {
+    $p = public_path('favicon.ico');
+    return file_exists($p) ? response()->file($p, ['Content-Type' => 'image/x-icon']) : abort(404);
+});
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/product/{slug}', [FrontendProductController::class, 'show'])->name('products.show');
 Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
+Route::get('/categories', [FrontendProductController::class, 'index'])->name('categories.index');
 Route::get('/verify/certificate/{certificate_number}', [\App\Http\Controllers\Frontend\CertificateVerificationController::class, 'verify'])->name('certificate.verify');
 Route::get('/verify/dealer-authorization/{certificate_number}', [\App\Http\Controllers\Frontend\DealerAuthorizationVerificationController::class, 'verify'])->name('certificate.dealer.verify');
 
@@ -38,9 +144,15 @@ Route::post('/cart/reorder/{orderId}', [\App\Http\Controllers\Frontend\CartContr
 
 // Wishlist
 Route::get('/wishlist', [\App\Http\Controllers\Frontend\WishlistController::class, 'index'])->name('wishlist.index');
-Route::post('/wishlist/toggle/{productId}', [\App\Http\Controllers\Frontend\WishlistController::class, 'toggle'])->name('wishlist.toggle');
-Route::delete('/wishlist/remove/{productId}', [\App\Http\Controllers\Frontend\WishlistController::class, 'remove'])->name('wishlist.remove');
-Route::post('/wishlist/move-to-cart/{productId}', [\App\Http\Controllers\Frontend\WishlistController::class, 'moveToCart'])->name('wishlist.move_to_cart');
+Route::match(['GET', 'POST'], '/wishlist/toggle/{productId}', [\App\Http\Controllers\Frontend\WishlistController::class, 'toggle'])->name('wishlist.toggle');
+Route::match(['GET', 'POST', 'DELETE'], '/wishlist/remove/{productId}', [\App\Http\Controllers\Frontend\WishlistController::class, 'remove'])->name('wishlist.remove');
+Route::match(['GET', 'POST'], '/wishlist/move-to-cart/{productId}', [\App\Http\Controllers\Frontend\WishlistController::class, 'moveToCart'])->name('wishlist.move_to_cart');
+
+// Material Samples & Specimen Requests
+Route::post('/sample/request', [\App\Http\Controllers\Frontend\FrontendSampleController::class, 'store'])->name('sample.request.store');
+
+// Ask for Quotation (RFQ) Submissions
+Route::post('/quotation/request', [\App\Http\Controllers\Frontend\FrontendQuotationController::class, 'store'])->name('quotation.request.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -194,6 +306,11 @@ Route::get('/run-seed', function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', function () {
+        return auth('admin')->check()
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('admin.login');
+    });
     Route::get('/login', [App\Http\Controllers\Auth\Admin\LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [App\Http\Controllers\Auth\Admin\LoginController::class, 'login'])->name('login.submit');
     Route::post('/logout', [App\Http\Controllers\Auth\Admin\LoginController::class, 'logout'])->name('logout');
@@ -201,6 +318,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['admin.auth'])->group(function () {
         // Command Center / Dashboard
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::post('/launch-mode/toggle', [App\Http\Controllers\Admin\DashboardController::class, 'toggleLaunchMode'])->name('launch-mode.toggle');
+        Route::post('/launch-mode/update', [App\Http\Controllers\Admin\DashboardController::class, 'updateLaunchSettings'])->name('launch-mode.update');
 
         // Vendors / Sellers Management
         Route::get('/vendors', [App\Http\Controllers\Admin\VendorController::class, 'index'])->name('vendors.index');
@@ -228,6 +347,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/products/{id}/approve', [App\Http\Controllers\Admin\ProductController::class, 'approve'])->name('products.approve');
         Route::post('/products/{id}/reject', [App\Http\Controllers\Admin\ProductController::class, 'reject'])->name('products.reject');
         Route::post('/products/{id}/toggle-featured', [App\Http\Controllers\Admin\ProductController::class, 'toggleFeatured'])->name('products.toggle_featured');
+        Route::post('/products/{id}/toggle-best-seller', [App\Http\Controllers\Admin\ProductController::class, 'toggleBestSeller'])->name('products.toggle_best_seller');
+        Route::post('/products/{id}/toggle-trending', [App\Http\Controllers\Admin\ProductController::class, 'toggleTrending'])->name('products.toggle_trending');
+        Route::post('/products/{id}/toggle-new-arrival', [App\Http\Controllers\Admin\ProductController::class, 'toggleNewArrival'])->name('products.toggle_new_arrival');
         Route::post('/products/{id}/toggle-sponsored', [App\Http\Controllers\Admin\ProductController::class, 'toggleSponsored'])->name('products.toggle_sponsored');
         Route::post('/products/{id}/toggle-deal-of-day', [App\Http\Controllers\Admin\ProductController::class, 'toggleDealOfDay'])->name('products.toggle_deal_of_day');
         Route::post('/products/{id}/toggle-status', [App\Http\Controllers\Admin\ProductController::class, 'toggleStatus'])->name('products.toggle_status');
@@ -239,6 +361,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/orders/{id}/update-status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update_status');
         Route::post('/orders/{id}/update-payment', [App\Http\Controllers\Admin\OrderController::class, 'updatePaymentStatus'])->name('orders.update_payment');
 
+        // Product Samples & Trial Testing Management
+        Route::get('/samples', [App\Http\Controllers\Admin\AdminSampleController::class, 'index'])->name('samples.index');
+        Route::get('/samples/vendor-analytics', [App\Http\Controllers\Admin\AdminSampleController::class, 'vendorAnalytics'])->name('samples.vendor-analytics');
+        Route::get('/samples/{id}', [App\Http\Controllers\Admin\AdminSampleController::class, 'show'])->name('samples.show');
+        Route::post('/samples/{id}/update-status', [App\Http\Controllers\Admin\AdminSampleController::class, 'updateStatus'])->name('samples.update_status');
+
+        // Master Quotations & RFQ Monitor
+        Route::get('/quotations', [\App\Http\Controllers\Admin\AdminQuotationController::class, 'index'])->name('quotations.index');
+        Route::get('/quotations/vendor-analytics', [\App\Http\Controllers\Admin\AdminQuotationController::class, 'vendorAnalytics'])->name('quotations.vendor-analytics');
+        Route::get('/quotations/{id}', [\App\Http\Controllers\Admin\AdminQuotationController::class, 'show'])->name('quotations.show');
+        Route::post('/quotations/{id}/update-status', [\App\Http\Controllers\Admin\AdminQuotationController::class, 'updateStatus'])->name('quotations.update_status');
+
         // Notifications Center
         Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-all-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllRead'])->name('notifications.mark_all_read');
@@ -247,15 +381,37 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Categories & Taxonomy
         Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
         Route::post('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
+        Route::post('/categories/sync-hub', [App\Http\Controllers\Admin\CategoryController::class, 'syncHub'])->name('categories.sync-hub');
+        Route::post('/categories/update-homepage-order', [App\Http\Controllers\Admin\CategoryController::class, 'updateHomepageOrder'])->name('categories.update-homepage-order');
+        Route::post('/categories/{id}/toggle-featured', [App\Http\Controllers\Admin\CategoryController::class, 'toggleFeatured'])->name('categories.toggle-featured');
         Route::put('/categories/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
+
+        // Brands Master (Super Admin Brand Hierarchy Management)
+        Route::get('/brands', [App\Http\Controllers\Admin\BrandController::class, 'index'])->name('brands.index');
+        Route::get('/brands/create', [App\Http\Controllers\Admin\BrandController::class, 'create'])->name('brands.create');
+        Route::post('/brands', [App\Http\Controllers\Admin\BrandController::class, 'store'])->name('brands.store');
+        Route::get('/brands/{id}/edit', [App\Http\Controllers\Admin\BrandController::class, 'edit'])->name('brands.edit');
+        Route::put('/brands/{id}', [App\Http\Controllers\Admin\BrandController::class, 'update'])->name('brands.update');
+        Route::delete('/brands/{id}', [App\Http\Controllers\Admin\BrandController::class, 'destroy'])->name('brands.destroy');
+        Route::post('/brands/{id}/toggle-status', [App\Http\Controllers\Admin\BrandController::class, 'toggleStatus'])->name('brands.toggle-status');
+        Route::post('/brands/{id}/toggle-protection', [App\Http\Controllers\Admin\BrandController::class, 'toggleProtection'])->name('brands.toggle-protection');
+        Route::post('/brands/{id}/toggle-featured', [App\Http\Controllers\Admin\BrandController::class, 'toggleFeatured'])->name('brands.toggle-featured');
+
+        // Brand Titles & Custom Tiers (Super Brand, Sub Brand, National Brand, etc.)
+        Route::prefix('brand-titles')->name('brand-titles.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\BrandTitleController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\Admin\BrandTitleController::class, 'store'])->name('store');
+            Route::post('/quick-store', [App\Http\Controllers\Admin\BrandTitleController::class, 'quickStore'])->name('quick-store');
+            Route::put('/{id}', [App\Http\Controllers\Admin\BrandTitleController::class, 'update'])->name('update');
+            Route::delete('/{id}', [App\Http\Controllers\Admin\BrandTitleController::class, 'destroy'])->name('destroy');
+        });
 
         // Brand Registry & Trademark Applications
         Route::get('/brand-registry', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'index'])->name('brands.registry.index');
         Route::get('/brand-registry/{id}', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'show'])->name('brands.registry.show');
         Route::post('/brand-registry/{id}/approve', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'approve'])->name('brands.registry.approve');
         Route::post('/brand-registry/{id}/reject', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'reject'])->name('brands.registry.reject');
-        Route::post('/brands/{id}/toggle-protection', [App\Http\Controllers\Admin\AdminBrandRegistryController::class, 'toggleProtection'])->name('brands.toggle-protection');
 
         // Dealer & Distributor Authorizations
         Route::get('/dealer-authorizations', [App\Http\Controllers\Admin\AdminDealerAuthorizationController::class, 'index'])->name('dealer-authorizations.index');
@@ -279,6 +435,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/logistics', [App\Http\Controllers\Admin\LogisticsController::class, 'index'])->name('logistics.index');
         Route::post('/logistics/{id}/toggle-status', [App\Http\Controllers\Admin\LogisticsController::class, 'toggleStatus'])->name('logistics.toggle_status');
         Route::post('/logistics/{id}/update-rate', [App\Http\Controllers\Admin\LogisticsController::class, 'updateRate'])->name('logistics.update_rate');
+
+        // Homepage Merchandising & Storefront Control
+        Route::get('/homepage', [App\Http\Controllers\Admin\HomepageController::class, 'index'])->name('homepage.index');
+        Route::post('/homepage/products/toggle', [App\Http\Controllers\Admin\HomepageController::class, 'toggleProductFlag'])->name('homepage.products.toggle');
+        Route::post('/homepage/promo-cards', [App\Http\Controllers\Admin\HomepageController::class, 'storePromoCard'])->name('homepage.promo-cards.store');
+        Route::post('/homepage/promo-cards/{id}/update', [App\Http\Controllers\Admin\HomepageController::class, 'updatePromoCard'])->name('homepage.promo-cards.update');
+        Route::post('/homepage/promo-cards/{id}/toggle', [App\Http\Controllers\Admin\HomepageController::class, 'togglePromoCardStatus'])->name('homepage.promo-cards.toggle');
+        Route::delete('/homepage/promo-cards/{id}', [App\Http\Controllers\Admin\HomepageController::class, 'deletePromoCard'])->name('homepage.promo-cards.destroy');
+        Route::post('/homepage/trending-settings', [App\Http\Controllers\Admin\HomepageController::class, 'updateTrendingSettings'])->name('homepage.trending-settings.update');
+        Route::post('/homepage/banners', [App\Http\Controllers\Admin\HomepageController::class, 'storeBanner'])->name('homepage.banners.store');
+        Route::post('/homepage/banners/{id}/update', [App\Http\Controllers\Admin\HomepageController::class, 'updateBanner'])->name('homepage.banners.update');
+        Route::post('/homepage/banners/{id}/toggle', [App\Http\Controllers\Admin\HomepageController::class, 'toggleBannerStatus'])->name('homepage.banners.toggle');
+        Route::delete('/homepage/banners/{id}', [App\Http\Controllers\Admin\HomepageController::class, 'deleteBanner'])->name('homepage.banners.destroy');
+        Route::post('/homepage/hero-cards/update', [App\Http\Controllers\Admin\HomepageController::class, 'updateHeroCards'])->name('homepage.hero-cards.update');
+        Route::post('/homepage/new-arrivals/update', [App\Http\Controllers\Admin\HomepageController::class, 'updateNewArrivalsSettings'])->name('homepage.new-arrivals.update');
+        Route::post('/homepage/categories/{id}/toggle', [App\Http\Controllers\Admin\HomepageController::class, 'toggleCategoryHomepage'])->name('homepage.categories.toggle');
+        Route::post('/homepage/sync-defaults', [App\Http\Controllers\Admin\HomepageController::class, 'syncDefaultProducts'])->name('homepage.sync-defaults');
 
         // Platform & Marketplace Settings
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
@@ -307,6 +480,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/subscriptions', [App\Http\Controllers\Admin\AdminSubscriptionPlanController::class, 'subscribers'])->name('subscriptions.index');
         Route::post('/subscriptions/{id}/approve', [App\Http\Controllers\Admin\AdminSubscriptionPlanController::class, 'approveSubscription'])->name('subscriptions.approve');
         Route::post('/subscriptions/assign', [App\Http\Controllers\Admin\AdminSubscriptionPlanController::class, 'assignSubscription'])->name('subscriptions.assign');
+
+        // Subadmins & Staff RBAC Access Control
+        Route::get('/subadmins', [App\Http\Controllers\Admin\SubadminController::class, 'index'])->name('subadmins.index');
+        Route::get('/subadmins/create', [App\Http\Controllers\Admin\SubadminController::class, 'create'])->name('subadmins.create');
+        Route::post('/subadmins', [App\Http\Controllers\Admin\SubadminController::class, 'store'])->name('subadmins.store');
+        Route::get('/subadmins/{id}/edit', [App\Http\Controllers\Admin\SubadminController::class, 'edit'])->name('subadmins.edit');
+        Route::put('/subadmins/{id}', [App\Http\Controllers\Admin\SubadminController::class, 'update'])->name('subadmins.update');
+        Route::post('/subadmins/{id}/toggle-status', [App\Http\Controllers\Admin\SubadminController::class, 'toggleStatus'])->name('subadmins.toggle_status');
+        Route::post('/subadmins/{id}/reset-password', [App\Http\Controllers\Admin\SubadminController::class, 'resetPassword'])->name('subadmins.reset_password');
+        Route::delete('/subadmins/{id}', [App\Http\Controllers\Admin\SubadminController::class, 'destroy'])->name('subadmins.destroy');
     });
 });
 
@@ -403,9 +586,21 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
         Route::get('/returns', [App\Http\Controllers\Vendor\OrderController::class, 'returns'])->name('returns');
         Route::get('/bulk-orders', [App\Http\Controllers\Vendor\OrderController::class, 'bulkOrders'])->name('bulk-orders');
 
-        // Quotations
-        Route::get('/quotations', [App\Http\Controllers\Vendor\QuotationController::class, 'index'])->name('quotations.index');
-        Route::get('/quotations/{id}', [App\Http\Controllers\Vendor\QuotationController::class, 'show'])->name('quotations.show');
+        // Product Samples & Trial Management
+        Route::get('/samples', [App\Http\Controllers\Vendor\VendorSampleController::class, 'index'])->name('samples.index');
+        Route::get('/samples/{id}', [App\Http\Controllers\Vendor\VendorSampleController::class, 'show'])->name('samples.show');
+        Route::post('/samples/{id}/approve', [App\Http\Controllers\Vendor\VendorSampleController::class, 'approve'])->name('samples.approve');
+        Route::post('/samples/{id}/dispatch', [App\Http\Controllers\Vendor\VendorSampleController::class, 'dispatch'])->name('samples.dispatch');
+        Route::post('/samples/{id}/deliver', [App\Http\Controllers\Vendor\VendorSampleController::class, 'deliver'])->name('samples.deliver');
+        Route::post('/samples/{id}/reject', [App\Http\Controllers\Vendor\VendorSampleController::class, 'reject'])->name('samples.reject');
+        Route::post('/samples/{id}/convert-quote', [App\Http\Controllers\Vendor\VendorSampleController::class, 'convertToQuote'])->name('samples.convert-quote');
+
+        // Quotations & RFQ Desk
+        Route::get('/quotations', [\App\Http\Controllers\Vendor\QuotationController::class, 'index'])->name('quotations.index');
+        Route::get('/quotations/{id}', [\App\Http\Controllers\Vendor\QuotationController::class, 'show'])->name('quotations.show');
+        Route::post('/quotations/{id}/send-proposal', [\App\Http\Controllers\Vendor\QuotationController::class, 'sendProposal'])->name('quotations.send_proposal');
+        Route::post('/quotations/{id}/reject', [\App\Http\Controllers\Vendor\QuotationController::class, 'reject'])->name('quotations.reject');
+        Route::post('/quotations/{id}/convert-to-order', [\App\Http\Controllers\Vendor\QuotationController::class, 'convertToOrder'])->name('quotations.convert');
 
         // Finance & Payments
         Route::get('/earnings', [App\Http\Controllers\Vendor\FinanceController::class, 'earnings'])->name('earnings');
@@ -496,7 +691,11 @@ Route::prefix('account')->name('customer.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'index'])->name('dashboard');
     Route::get('/orders', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'orders'])->name('orders');
     Route::get('/orders/{id}', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'orderDetails'])->name('orders.show');
+    Route::get('/samples', [App\Http\Controllers\Customer\CustomerSampleController::class, 'index'])->name('samples.index');
+    Route::get('/samples/{id}', [App\Http\Controllers\Customer\CustomerSampleController::class, 'show'])->name('samples.show');
     Route::get('/quotes', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'quotes'])->name('quotes');
+    Route::post('/quotes/{id}/accept', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'acceptQuote'])->name('quotes.accept');
+    Route::post('/quotes/{id}/reject', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'rejectQuote'])->name('quotes.reject');
     Route::get('/wishlist', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'wishlist'])->name('wishlist');
     Route::get('/addresses', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'addresses'])->name('addresses');
     Route::post('/addresses', [App\Http\Controllers\Customer\CustomerDashboardController::class, 'storeAddress'])->name('addresses.store');
@@ -539,12 +738,22 @@ Route::get('/clean-demo-data', function () {
         if (\Illuminate\Support\Facades\Schema::hasTable('products')) {
             \Illuminate\Support\Facades\DB::table('products')->where('sku', 'GRD-STL-892')->delete();
         }
+        if (\Illuminate\Support\Facades\Schema::hasTable('sample_requests')) {
+            \Illuminate\Support\Facades\DB::table('sample_requests')->whereIn('request_number', [
+                'SMP-2026-10145', 'SMP-2026-29182', 'SMP-2026-44819', 'SMP-2026-73190'
+            ])->delete();
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('quotations')) {
+            \Illuminate\Support\Facades\DB::table('quotations')->whereIn('quotation_number', [
+                'RFQ-2026-10491', 'RFQ-2026-28190', 'RFQ-2026-39145', 'RFQ-2026-44021'
+            ])->delete();
+        }
 
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
 
         return "<div style='font-family: sans-serif; padding: 30px; background: #0f172a; color: #fff; border-radius: 8px; max-width: 800px; margin: 50px auto; line-height: 1.6;'>
             <h2 style='color: #22c55e;'>✅ Demo Data Cleaned Successfully!</h2>
-            <p>All demo sample orders have been purged. Vendor, customer, and admin dashboards now compute 100% strictly actual live data from zero.</p>
+            <p>All demo sample requests and orders have been purged. Vendor, customer, and admin dashboards now compute 100% strictly actual live data from zero.</p>
             <p><a href='/vendor/dashboard' style='color: #38bdf8; font-weight: bold;'>Go to Vendor Dashboard →</a></p>
         </div>";
     } catch (\Throwable $e) {
@@ -552,10 +761,142 @@ Route::get('/clean-demo-data', function () {
     }
 });
 
-// Friendly aliases for Customer Dashboard
+// Secure migration and database helper endpoints for deployment / local updates
+Route::get('/run-migrate', function () {
+    $secretKey = request()->query('secret');
+    $expectedSecret = env('MIGRATION_SECRET_KEY', 'GarudoB2bDeploy2026SecretKeySecure!');
+
+    if (!$secretKey || $secretKey !== $expectedSecret) {
+        abort(403, 'Unauthorized Access: Invalid or Missing Secret Key.');
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+
+        return "<div style='font-family: sans-serif; padding: 30px; background: #0b4d3c; color: #fff; border-radius: 8px; max-width: 800px; margin: 50px auto; line-height: 1.6;'>
+            <h2 style='color: #34d399;'>✅ Database Migrations Run Successfully!</h2>
+            <pre style='background: #062b22; padding: 15px; border-radius: 6px; overflow-x: auto; color: #a7f3d0;'>" . e($output) . "</pre>
+            <p><a href='/admin/samples' style='color: #fbbf24; font-weight: bold;'>Go to Admin Sample Monitor →</a> | <a href='/vendor/samples' style='color: #6ee7b7;'>Vendor Samples →</a></p>
+        </div>";
+    } catch (\Throwable $e) {
+        return response("Migration Error: " . $e->getMessage(), 500);
+    }
+});
+
+Route::get('/run-seed-samples', function () {
+    $secretKey = request()->query('secret');
+    $expectedSecret = env('MIGRATION_SECRET_KEY', 'GarudoB2bDeploy2026SecretKeySecure!');
+
+    if (!$secretKey || $secretKey !== $expectedSecret) {
+        abort(403, 'Unauthorized Access: Invalid or Missing Secret Key.');
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', [
+            '--class' => 'Database\\Seeders\\SampleSystemSeeder',
+            '--force' => true
+        ]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+
+        return "<div style='font-family: sans-serif; padding: 30px; background: #0b4d3c; color: #fff; border-radius: 8px; max-width: 800px; margin: 50px auto; line-height: 1.6;'>
+            <h2 style='color: #34d399;'>✅ Sample System Seeded Successfully!</h2>
+            <pre style='background: #062b22; padding: 15px; border-radius: 6px; overflow-x: auto; color: #a7f3d0;'>" . e($output) . "</pre>
+            <p><a href='/admin/samples' style='color: #fbbf24; font-weight: bold;'>Go to Admin Sample Monitor →</a> | <a href='/admin/samples/vendor-analytics' style='color: #fbbf24; font-weight: bold;'>Vendor Analytics →</a></p>
+        </div>";
+    } catch (\Throwable $e) {
+        return response("Seeding Error: " . $e->getMessage(), 500);
+    }
+});
+
+Route::get('/run-deploy-samples', function () {
+    $secretKey = request()->query('secret');
+    $expectedSecret = env('MIGRATION_SECRET_KEY', 'GarudoB2bDeploy2026SecretKeySecure!');
+
+    if (!$secretKey || $secretKey !== $expectedSecret) {
+        abort(403, 'Unauthorized Access: Invalid or Missing Secret Key.');
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
+
+        \Illuminate\Support\Facades\Artisan::call('db:seed', [
+            '--class' => 'Database\\Seeders\\SampleSystemSeeder',
+            '--force' => true
+        ]);
+        $seedOutput = \Illuminate\Support\Facades\Artisan::output();
+
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+
+        return "<div style='font-family: sans-serif; padding: 30px; background: #0b4d3c; color: #fff; border-radius: 8px; max-width: 800px; margin: 50px auto; line-height: 1.6;'>
+            <h2 style='color: #34d399;'>✅ Sample System Deployed & Seeded Successfully!</h2>
+            <h4 style='color: #6ee7b7; margin-bottom: 5px;'>Migration Output:</h4>
+            <pre style='background: #062b22; padding: 12px; border-radius: 6px; overflow-x: auto; color: #a7f3d0; margin-bottom: 15px;'>" . e($migrateOutput) . "</pre>
+            <h4 style='color: #6ee7b7; margin-bottom: 5px;'>Seeder Output:</h4>
+            <pre style='background: #062b22; padding: 12px; border-radius: 6px; overflow-x: auto; color: #a7f3d0;'>" . e($seedOutput) . "</pre>
+            <p style='margin-top: 20px;'>
+                <a href='/admin/samples' style='background: #10b981; color: #fff; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 10px;'>Go to Admin Sample Monitor →</a>
+                <a href='/admin/samples/vendor-analytics' style='background: #f59e0b; color: #000; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 10px;'>Vendor Analytics →</a>
+                <a href='/vendor/samples' style='background: #3b82f6; color: #fff; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold;'>Vendor Desk →</a>
+            </p>
+        </div>";
+    } catch (\Throwable $e) {
+        return response("Deployment Error: " . $e->getMessage(), 500);
+    }
+});
+
+Route::get('/run-deploy-quotations', function () {
+    $secretKey = request()->query('secret');
+    $expectedSecret = env('MIGRATION_SECRET_KEY', 'GarudoB2bDeploy2026SecretKeySecure!');
+
+    if (!$secretKey || $secretKey !== $expectedSecret) {
+        abort(403, 'Unauthorized Access: Invalid or Missing Secret Key.');
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
+
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+
+        return "<div style='font-family: sans-serif; padding: 30px; background: #0b4d3c; color: #fff; border-radius: 8px; max-width: 800px; margin: 50px auto; line-height: 1.6;'>
+            <h2 style='color: #34d399;'>✅ Quotation System Migrations Deployed Successfully!</h2>
+            <h4 style='color: #6ee7b7; margin-bottom: 5px;'>Migration Output:</h4>
+            <pre style='background: #062b22; padding: 12px; border-radius: 6px; overflow-x: auto; color: #a7f3d0; margin-bottom: 15px;'>" . e($migrateOutput) . "</pre>
+            <p style='margin-top: 20px;'>
+                <a href='/admin/quotations' style='background: #10b981; color: #fff; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 10px;'>Admin Quotations Monitor →</a>
+                <a href='/admin/quotations/vendor-analytics' style='background: #f59e0b; color: #000; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 10px;'>Vendor RFQ Analytics →</a>
+                <a href='/vendor/quotations' style='background: #3b82f6; color: #fff; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold;'>Vendor RFQ Desk →</a>
+            </p>
+        </div>";
+    } catch (\Throwable $e) {
+        return response("Deployment Error: " . $e->getMessage(), 500);
+    }
+});
+
+// Friendly aliases for Customer Dashboard & Auth Shortcuts
 Route::redirect('/customer', '/account/dashboard');
 Route::redirect('/customer/dashboard', '/account/dashboard');
 Route::redirect('/customer-dashboard', '/account/dashboard');
+Route::redirect('/login', '/account/login');
+Route::redirect('/register', '/account/register');
+Route::redirect('/customer/login', '/account/login');
+Route::redirect('/customer/register', '/account/register');
+
+// Failsafe Storage Route: Serves uploaded files even if symlink is disabled or missing on shared hosting
+Route::get('/storage/{extra}', function ($extra) {
+    $path = storage_path('app/public/' . $extra);
+    if (!file_exists($path) || !is_file($path)) {
+        abort(404);
+    }
+    return response()->file($path);
+})->where('extra', '.*');
 
 
 

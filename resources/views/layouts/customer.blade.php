@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Customer Dashboard') - GARUDO B2B</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -508,20 +509,8 @@
                         <i class="bi bi-list fs-5"></i>
                     </button>
 
-                    <a href="{{ route('home') }}" class="brand-logo-wrap">
-                        <div class="brand-logo-icon">
-                            <!-- Wings Graphic SVG matching Garudo Logo -->
-                            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M6 14C14 14 20 18 22 24C16 23 10 20 6 14Z" fill="#0B4D3C"/>
-                                <path d="M8 20C16 20 22 24 24 30C18 29 12 26 8 20Z" fill="#0B4D3C"/>
-                                <path d="M12 26C18 26 24 29 26 35C20 34 15 31 12 26Z" fill="#0B4D3C"/>
-                                <path d="M22 24C26 16 34 12 42 12C36 18 30 22 24 30C23 27 22 25 22 24Z" fill="#0B4D3C"/>
-                            </svg>
-                        </div>
-                        <div class="brand-text-block">
-                            <span class="brand-name">GARUDO</span>
-                            <span class="brand-tagline">BUILD BETTER. TOGETHER.</span>
-                        </div>
+                    <a href="{{ route('home') }}" class="brand-logo-wrap text-decoration-none" title="Garudo B2B Marketplace">
+                        <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 44px; max-height: 48px; width: auto; object-fit: contain;">
                     </a>
                 </div>
 
@@ -639,9 +628,9 @@
     <!-- ---------------- MOBILE OFFCANVAS SIDEBAR ---------------- -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel" style="width: 280px;">
         <div class="offcanvas-header border-bottom">
-            <div class="d-flex align-items-center gap-2">
-                <span class="brand-name" style="font-size: 1.2rem;">GARUDO</span>
-            </div>
+            <a href="{{ route('home') }}" class="d-inline-flex align-items-center text-decoration-none">
+                <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 34px; max-height: 36px; width: auto; object-fit: contain;">
+            </a>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body p-3">

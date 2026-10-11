@@ -62,7 +62,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-1">
                             <label class="form-label fw-semibold small text-dark mb-0">Category <span class="text-danger">*</span></label>
                             <button type="button" class="btn btn-link text-success p-0 small text-decoration-none fw-semibold" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                                <i class="bi bi-plus-circle me-1"></i>+ New Category
+                                <i class="bi bi-send-plus me-1"></i>+ Request Category
                             </button>
                         </div>
                         <select name="category_id" id="categorySelect" class="form-select" required>
@@ -79,15 +79,56 @@
                         <div class="d-flex align-items-center justify-content-between mb-1">
                             <label class="form-label fw-semibold small text-dark mb-0">Brand / Manufacturer</label>
                             <button type="button" class="btn btn-link text-success p-0 small text-decoration-none fw-semibold" data-bs-toggle="modal" data-bs-target="#addBrandModal">
-                                <i class="bi bi-plus-circle me-1"></i>+ New Brand
+                                <i class="bi bi-send-plus me-1"></i>+ Request Brand
                             </button>
                         </div>
-                        <select name="brand_id" id="brandSelect" class="form-select">
-                            <option value="">-- Select Brand (Optional) --</option>
-                            @foreach($brands as $brand)
-                                <option value="{{ $brand->id }}" {{ old('brand_id') == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
+                        <select name="brand_id" id="brandSelect" class="form-select" onchange="checkBrandProtection(this)">
+                            <option value="" data-protected="0" data-allowed="1">-- Select Brand (Optional / Generic) --</option>
+                            @foreach($superBrands as $sb)
+                                @if($sb->activeSubBrands->count() > 0)
+                                    <optgroup label="👑 {{ $sb->name }} (Super Brand)">
+                                        <option value="{{ $sb->id }}" 
+                                                data-protected="{{ $sb->is_protected ? '1' : '0' }}" 
+                                                data-allowed="{{ $sb->canVendorSell($vendor) ? '1' : '0' }}"
+                                                {{ old('brand_id') == $sb->id ? 'selected' : '' }}>
+                                            {{ $sb->name }} [All {{ $sb->name }} Line] {{ $sb->is_protected ? '🛡️' : '' }}
+                                        </option>
+                                        @foreach($sb->activeSubBrands as $sub)
+                                            <option value="{{ $sub->id }}" 
+                                                    data-protected="{{ $sub->is_protected ? '1' : '0' }}" 
+                                                    data-allowed="{{ $sub->canVendorSell($vendor) ? '1' : '0' }}"
+                                                    {{ old('brand_id') == $sub->id ? 'selected' : '' }}>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ $sub->name }} (Sub Brand) {{ $sub->is_protected ? '🛡️' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @else
+                                    <option value="{{ $sb->id }}" 
+                                            data-protected="{{ $sb->is_protected ? '1' : '0' }}" 
+                                            data-allowed="{{ $sb->canVendorSell($vendor) ? '1' : '0' }}"
+                                            {{ old('brand_id') == $sb->id ? 'selected' : '' }}>
+                                        {{ $sb->name }} {{ $sb->is_protected ? '🛡️' : '' }}
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
+
+                        <!-- Brand Protection Alerts -->
+                        <div id="brandProtectionNotice" class="alert alert-warning py-2 px-3 small border-0 mt-2 d-none">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <div>
+                                    <i class="bi bi-shield-lock-fill text-warning me-1"></i>
+                                    <strong>Trademark Protected:</strong> You need verified dealer authorization to list this brand.
+                                </div>
+                                <a href="{{ route('vendor.dealer-authorizations.apply') }}" target="_blank" class="btn btn-warning btn-sm py-0 px-2 fw-bold text-dark text-nowrap">
+                                    Apply Now
+                                </a>
+                            </div>
+                        </div>
+                        <div id="brandVerifiedNotice" class="alert alert-success py-2 px-3 small border-0 mt-2 d-none">
+                            <i class="bi bi-patch-check-fill text-success me-1"></i>
+                            <strong>Verified Selling Rights:</strong> You are authorized to list products under this brand.
+                        </div>
                     </div>
 
                     <div class="col-md-4">
@@ -462,25 +503,253 @@
                     </div>
                 </div>
 
-                <div id="customPolicyBox" class="d-none">
-                    <label class="form-label fw-semibold small text-dark">Custom Policy / Return Terms</label>
-                    <textarea name="custom_policy" class="form-control form-control-sm" rows="4" placeholder="Specify custom terms for this product, e.g. 24-hr moisture damage notice, broken tile compensation with unboxing video, or factory-sealed non-returnable condition.">{{ old('custom_policy') }}</textarea>
+            <!-- 5. Material Samples & Trial Specimen Configuration -->
+            <div class="card-custom mb-4 p-4 shadow-sm border border-success border-opacity-25" style="background: linear-gradient(180deg, #FFFFFF 0%, #F8FAF9 100%);">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-box2-heart-fill text-success me-2"></i>Product Samples & Trial Testing</h6>
+                        <small class="text-muted">Offer material test swatches, cut specimens, or sample kits to B2B buyers</small>
+                    </div>
+                    <div class="form-check form-switch fs-6 mb-0">
+                        <input class="form-check-input cursor-pointer" type="checkbox" name="has_sample" id="hasSampleToggle" onchange="toggleSampleOptions(this)">
+                        <label class="form-check-label fw-semibold small text-dark" for="hasSampleToggle">Enable Samples</label>
+                    </div>
+                </div>
+
+                <div id="sampleDisabledNotice" class="p-3 bg-light rounded text-muted small">
+                    <i class="bi bi-info-circle me-1 text-primary"></i> <strong>Samples are currently disabled</strong> for this product. Enable the switch above if you want contractors, architects, and buyers to order physical test pieces before placing bulk orders.
+                </div>
+
+                <div id="sampleConfigSection" class="d-none">
+                    <!-- Sample Pricing Type Options -->
+                    <label class="form-label fw-semibold small text-dark mb-2">Sample Pricing Structure <span class="text-danger">*</span></label>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="p-2.5 border rounded-3 d-flex flex-column gap-1 cursor-pointer sample-type-card bg-white h-100 position-relative" style="transition: all 0.2s;" id="cardTypeFree">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="fw-bold text-success small"><i class="bi bi-gift-fill me-1"></i>100% Free</span>
+                                    <input type="radio" name="sample_type" value="free" checked onchange="updateSamplePricingFields('free')">
+                                </div>
+                                <span class="text-muted" style="font-size: 0.72rem;">Material & Delivery fully sponsored by vendor (₹0).</span>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="p-2.5 border rounded-3 d-flex flex-column gap-1 cursor-pointer sample-type-card bg-white h-100 position-relative" style="transition: all 0.2s;" id="cardTypePaid">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="fw-bold text-primary small"><i class="bi bi-currency-rupee me-1"></i>Paid Sample</span>
+                                    <input type="radio" name="sample_type" value="paid" onchange="updateSamplePricingFields('paid')">
+                                </div>
+                                <span class="text-muted" style="font-size: 0.72rem;">Buyer pays fixed sample price (+ shipping).</span>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="p-2.5 border rounded-3 d-flex flex-column gap-1 cursor-pointer sample-type-card bg-white h-100 position-relative" style="transition: all 0.2s;" id="cardTypePartial">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="fw-bold text-dark small"><i class="bi bi-truck me-1"></i>Partial Paid</span>
+                                    <input type="radio" name="sample_type" value="partial_paid" onchange="updateSamplePricingFields('partial_paid')">
+                                </div>
+                                <span class="text-muted" style="font-size: 0.72rem;">Sample is free (₹0), buyer pays shipping only.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Price & Shipping Fields -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6" id="samplePriceWrapper" style="display: none;">
+                            <label class="form-label fw-semibold small text-dark mb-1">Sample Price (₹) <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light">₹</span>
+                                <input type="number" step="0.01" name="sample_price" id="samplePriceInput" class="form-control" placeholder="99.00" value="{{ old('sample_price', '0.00') }}">
+                            </div>
+                        </div>
+
+                        <div class="col-6" id="sampleShippingWrapper" style="display: none;">
+                            <label class="form-label fw-semibold small text-dark mb-1">Sample Courier Fee (₹)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light">₹</span>
+                                <input type="number" step="0.01" name="sample_shipping_fee" id="sampleShippingInput" class="form-control" placeholder="50.00" value="{{ old('sample_shipping_fee', '0.00') }}">
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small text-dark mb-1">Max Sample Qty Per Buyer</label>
+                            <input type="number" name="sample_max_qty" class="form-control form-control-sm" value="{{ old('sample_max_qty', 1) }}" min="1" max="10">
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small text-dark mb-1">Sample Stock Quota (Optional)</label>
+                            <input type="number" name="sample_stock" class="form-control form-control-sm" placeholder="Unlimited" value="{{ old('sample_stock') }}" min="0">
+                        </div>
+                    </div>
+
+                    <!-- Specimen Specification -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-dark mb-1">Sample Specimen / Unit Description</label>
+                        <input type="text" name="sample_unit_description" class="form-control form-control-sm" placeholder="e.g. 500g Test Bottle / 1 Piece Cut Swatch (150x150mm) / 1 Brick Specimen" value="{{ old('sample_unit_description') }}">
+                        <div class="form-text small text-muted" style="font-size: 0.72rem;">Specify dimensions, test pouch volume, or cut sample size.</div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold small text-dark mb-1">Sample Dispatch Notes / Instructions</label>
+                        <textarea name="sample_instructions" rows="2" class="form-control form-control-sm" placeholder="e.g. Dispatched via Express Air within 24 hours. Includes technical test certificate & batch lab report.">{{ old('sample_instructions') }}</textarea>
+                    </div>
+
+                    <!-- Live Storefront Badge Preview -->
+                    <div class="p-2.5 bg-white rounded border border-success border-opacity-25 mt-3">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="small fw-bold text-dark"><i class="bi bi-eye text-primary me-1"></i>Storefront Preview:</span>
+                            <span id="previewSampleBadge" class="badge bg-success-subtle text-success border border-success px-2 py-1">
+                                <i class="bi bi-gift-fill me-1"></i> 100% Free Sample Available
+                            </span>
+                        </div>
+                        <p class="text-muted mb-0 small" style="font-size: 0.73rem;">Buyers will see a dedicated "Order Sample" CTA with real-time tracking.</p>
+                    </div>
+            <!-- 6. Ask for Quotation (RFQ) & Custom Variations Controls -->
+            <div class="card-custom mb-4 p-4 shadow-sm border border-primary border-opacity-25" style="background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-file-earmark-text-fill text-primary me-2"></i>Ask for Quotation & Custom RFQ Controls</h6>
+                        <small class="text-muted">Allow buyers to request custom pricing, tailored cut sizes, or bulk freight quotes</small>
+                    </div>
+                    <div class="form-check form-switch fs-6 mb-0">
+                        <input class="form-check-input cursor-pointer" type="checkbox" name="allow_quotation" value="1" id="allowQuotationToggle" checked onchange="toggleQuotationOptions(this)">
+                        <label class="form-check-label fw-semibold small text-dark" for="allowQuotationToggle">Enable RFQ</label>
+                    </div>
+                </div>
+
+                <div id="quotationDisabledNotice" class="p-3 bg-light rounded text-muted small d-none">
+                    <i class="bi bi-info-circle me-1 text-primary"></i> <strong>Ask for Quotation is disabled</strong> for this product. Buyers will only be able to add standard catalog quantities directly to cart.
+                </div>
+
+                <div id="quotationConfigSection">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark mb-1">Minimum RFQ Order Quantity</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" name="quotation_min_qty" class="form-control" placeholder="e.g. 50" value="{{ old('quotation_min_qty') }}" min="1">
+                                <span class="input-group-text bg-light small">Units / Bulk MOQ</span>
+                            </div>
+                            <div class="form-text small text-muted" style="font-size: 0.72rem;">Leave empty to inherit standard product MOQ.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark mb-1">BOQ / Drawing Document Upload</label>
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" name="quotation_attachments_allowed" value="1" id="quotationAttachmentsToggle" checked>
+                                <label class="form-check-label small text-dark" for="quotationAttachmentsToggle">Allow buyers to attach BOQ & Drawings (.pdf/.dwg/.xls)</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label fw-semibold small text-dark mb-0">Custom Variations & Quotation Questions (Dynamic Form Fields)</label>
+                                <button type="button" class="btn btn-link text-primary p-0 small text-decoration-none fw-semibold" onclick="addCustomRfqField()">
+                                    <i class="bi bi-plus-circle me-1"></i>+ Add Custom Field / Spec
+                                </button>
+                            </div>
+                            <p class="text-muted small mb-2" style="font-size: 0.73rem;">Define custom specifications or variation questions that the buyer can specify on the quotation form (e.g. "Steel Grade: Fe500D / Fe550D", "Custom Cut Length", "Surface Finish", "Delivery Schedule").</p>
+                            
+                            <div id="rfqFieldsContainer" class="d-flex flex-column gap-2">
+                                <div class="input-group input-group-sm rfq-field-row">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-tag-fill"></i></span>
+                                    <input type="text" name="quotation_custom_fields[]" class="form-control" placeholder="e.g. Custom Cut Length / Thickness / Grade Requirement" value="Grade / Specification Preference">
+                                    <button type="button" class="btn btn-outline-danger" onclick="this.closest('.rfq-field-row').remove()"><i class="bi bi-trash"></i></button>
+                                </div>
+                                <div class="input-group input-group-sm rfq-field-row">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-tag-fill"></i></span>
+                                    <input type="text" name="quotation_custom_fields[]" class="form-control" placeholder="e.g. Custom Cut Length / Thickness / Grade Requirement" value="Delivery Site Unloading Facility Available (Yes/No)">
+                                    <button type="button" class="btn btn-outline-danger" onclick="this.closest('.rfq-field-row').remove()"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-dark mb-1">Quotation Guidelines / Response SLA for Buyers</label>
+                            <textarea name="quotation_notes" rows="2" class="form-control form-control-sm" placeholder="e.g. We provide mill test certificates and F.O.R. site delivery quotes within 24 hours. Wholesale rates applicable for 10+ metric tonnes.">{{ old('quotation_notes') }}</textarea>
+                            <div class="form-text small text-muted" style="font-size: 0.72rem;">This note is prominently displayed to buyers inside the "Ask for Quotation" modal.</div>
+                        </div>
+                    </div>
+
+                    <!-- Storefront RFQ Preview -->
+                    <div class="p-2.5 bg-white rounded border border-primary border-opacity-25 mt-2">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="small fw-bold text-dark"><i class="bi bi-eye text-primary me-1"></i>Buyer Storefront View:</span>
+                            <span class="badge bg-primary text-white px-2 py-1">
+                                <i class="bi bi-file-earmark-text me-1"></i> Ask for Quotation Enabled
+                            </span>
+                        </div>
+                        <p class="text-muted mb-0 small" style="font-size: 0.73rem;">Quotation inquiries will instantly dispatch SMS/email alerts to your dashboard & Super Admin trade desk.</p>
+                    </div>
                 </div>
             </div>
 
             <script>
-            function togglePolicyField(val) {
-                const customBox = document.getElementById('customPolicyBox');
-                const inheritNotice = document.getElementById('inheritPolicyNotice');
-                if (val === 'custom') {
-                    customBox.classList.remove('d-none');
-                    inheritNotice.classList.add('d-none');
+            function toggleSampleOptions(checkbox) {
+                const configSection = document.getElementById('sampleConfigSection');
+                const disabledNotice = document.getElementById('sampleDisabledNotice');
+                if (checkbox.checked) {
+                    configSection.classList.remove('d-none');
+                    disabledNotice.classList.add('d-none');
                 } else {
-                    customBox.classList.add('d-none');
-                    inheritNotice.classList.remove('d-none');
+                    configSection.classList.add('d-none');
+                    disabledNotice.classList.remove('d-none');
                 }
             }
+
+            function updateSamplePricingFields(type) {
+                const priceWrap = document.getElementById('samplePriceWrapper');
+                const shipWrap = document.getElementById('sampleShippingWrapper');
+                const previewBadge = document.getElementById('previewSampleBadge');
+
+                if (type === 'free') {
+                    if (priceWrap) priceWrap.style.display = 'none';
+                    if (shipWrap) shipWrap.style.display = 'none';
+                    if (previewBadge) {
+                        previewBadge.className = 'badge bg-success-subtle text-success border border-success px-2 py-1';
+                        previewBadge.innerHTML = '<i class="bi bi-gift-fill me-1"></i> 100% Free Sample Available';
+                    }
+                } else if (type === 'paid') {
+                    if (priceWrap) priceWrap.style.display = 'block';
+                    if (shipWrap) shipWrap.style.display = 'block';
+                    if (previewBadge) {
+                        previewBadge.className = 'badge bg-primary-subtle text-primary border border-primary px-2 py-1';
+                        previewBadge.innerHTML = '<i class="bi bi-currency-rupee me-1"></i> Paid Sample Available';
+                    }
+                } else if (type === 'partial_paid') {
+                    if (priceWrap) priceWrap.style.display = 'none';
+                    if (shipWrap) shipWrap.style.display = 'block';
+                    if (previewBadge) {
+                        previewBadge.className = 'badge bg-warning-subtle text-dark border border-warning px-2 py-1';
+                        previewBadge.innerHTML = '<i class="bi bi-truck me-1"></i> Sample Available (Shipping Only)';
+                    }
+                }
+            }
+
+            function toggleQuotationOptions(checkbox) {
+                const configSection = document.getElementById('quotationConfigSection');
+                const disabledNotice = document.getElementById('quotationDisabledNotice');
+                if (checkbox.checked) {
+                    configSection.classList.remove('d-none');
+                    disabledNotice.classList.add('d-none');
+                } else {
+                    configSection.classList.add('d-none');
+                    disabledNotice.classList.remove('d-none');
+                }
+            }
+
+            function addCustomRfqField() {
+                const container = document.getElementById('rfqFieldsContainer');
+                const row = document.createElement('div');
+                row.className = 'input-group input-group-sm rfq-field-row';
+                row.innerHTML = `
+                    <span class="input-group-text bg-light text-muted"><i class="bi bi-tag-fill"></i></span>
+                    <input type="text" name="quotation_custom_fields[]" class="form-control" placeholder="e.g. Custom Cut Length / Surface Finish / Grade">
+                    <button type="button" class="btn btn-outline-danger" onclick="this.closest('.rfq-field-row').remove()"><i class="bi bi-trash"></i></button>
+                `;
+                container.appendChild(row);
+            }
             </script>
+
 
             <!-- Submit Button Card -->
             <div class="card-custom p-4 shadow-sm sticky-top" style="top: 80px; z-index: 10;">
@@ -495,38 +764,44 @@
     </div>
 </form>
 
-<!-- Modal: Quick Add Category -->
+<!-- Modal: Quick Request Category -->
 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header border-bottom">
-                <h6 class="modal-title fw-bold" id="addCategoryModalLabel"><i class="bi bi-grid-plus text-success me-2"></i>Create New Category</h6>
+                <h6 class="modal-title fw-bold" id="addCategoryModalLabel"><i class="bi bi-diagram-3 text-success me-2"></i>Request New Category / Subcategory</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="quickCategoryForm" onsubmit="submitQuickCategory(event)">
                 <div class="modal-body p-4">
+                    <div class="alert alert-info py-2 px-3 small border-0 mb-3" style="background-color: #EBF5FF; color: #1E429F; border-radius: 8px;">
+                        <i class="bi bi-shield-check me-1"></i> <strong>Admin Review:</strong> All new categories are verified by Super Admin before going live in the marketplace catalog.
+                    </div>
+                    <div id="catSuccessAlert" class="alert alert-success py-2 px-3 small border-0 mb-3 d-none"></div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Category Name <span class="text-danger">*</span></label>
-                        <input type="text" id="newCatName" class="form-control" placeholder="e.g. Ready Mix Concrete (RMC)" required>
+                        <label class="form-label fw-semibold small">Category / Subcategory Name <span class="text-danger">*</span></label>
+                        <input type="text" id="newCatName" class="form-control" placeholder="e.g. Ready Mix Concrete (RMC) / False Ceiling" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Parent Category (Optional)</label>
+                        <label class="form-label fw-semibold small">Placement in Hierarchy</label>
                         <select id="newCatParent" class="form-select">
-                            <option value="">-- No Parent (Root Category) --</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                            @endforeach
+                            <option value="">-- Create as Main Root Category --</option>
+                            <optgroup label="Or add as Subcategory under:">
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                @endforeach
+                            </optgroup>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Short Description (Optional)</label>
-                        <textarea id="newCatDesc" rows="2" class="form-control" placeholder="Brief details about materials under this category..."></textarea>
+                        <label class="form-label fw-semibold small">Justification / Details (Why is this needed?) <span class="text-danger">*</span></label>
+                        <textarea id="newCatDesc" rows="2" class="form-control" placeholder="Explain the building materials / products that fall under this category..." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top bg-light">
                     <button type="button" class="btn btn-light border btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" id="saveCatBtn" class="btn btn-success btn-sm px-4" style="background-color: var(--garudo-primary); border: none;">
-                        <i class="bi bi-check-lg me-1"></i> Save & Auto-Select
+                        <i class="bi bi-send-check me-1"></i> Submit for Admin Verification
                     </button>
                 </div>
             </form>
@@ -534,19 +809,23 @@
     </div>
 </div>
 
-<!-- Modal: Quick Add Brand -->
+<!-- Modal: Quick Request Brand -->
 <div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header border-bottom">
-                <h6 class="modal-title fw-bold" id="addBrandModalLabel"><i class="bi bi-patch-check text-success me-2"></i>Create New Brand / Manufacturer</h6>
+                <h6 class="modal-title fw-bold" id="addBrandModalLabel"><i class="bi bi-patch-check text-success me-2"></i>Request New Brand / Manufacturer</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="quickBrandForm" onsubmit="submitQuickBrand(event)">
                 <div class="modal-body p-4">
+                    <div class="alert alert-info py-2 px-3 small border-0 mb-3" style="background-color: #EBF5FF; color: #1E429F; border-radius: 8px;">
+                        <i class="bi bi-shield-check me-1"></i> <strong>Admin Review:</strong> New brand requests are verified by Super Admin to validate manufacturer authenticity before listing.
+                    </div>
+                    <div id="brandSuccessAlert" class="alert alert-success py-2 px-3 small border-0 mb-3 d-none"></div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Brand / Manufacturer Name <span class="text-danger">*</span></label>
-                        <input type="text" id="newBrandName" class="form-control" placeholder="e.g. Tata Tiscon / Ambuja Cement" required>
+                        <input type="text" id="newBrandName" class="form-control" placeholder="e.g. Tata Tiscon / Ambuja Cement / JSW Steel" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Country of Origin</label>
@@ -556,11 +835,15 @@
                         <label class="form-label fw-semibold small">Website URL (Optional)</label>
                         <input type="url" id="newBrandWebsite" class="form-control" placeholder="https://example.com">
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Justification / Catalog Note <span class="text-danger">*</span></label>
+                        <textarea id="newBrandDesc" rows="2" class="form-control" placeholder="Provide details about the brand and authorized dealership..." required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer border-top bg-light">
                     <button type="button" class="btn btn-light border btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" id="saveBrandBtn" class="btn btn-success btn-sm px-4" style="background-color: var(--garudo-primary); border: none;">
-                        <i class="bi bi-check-lg me-1"></i> Save & Auto-Select
+                        <i class="bi bi-send-check me-1"></i> Submit for Admin Verification
                     </button>
                 </div>
             </form>
@@ -755,17 +1038,18 @@
         });
     }
 
-    // 5. Quick AJAX Category Submission
+    // 5. Quick AJAX Category Request Submission
     function submitQuickCategory(e) {
         e.preventDefault();
         const name = document.getElementById('newCatName').value.trim();
         const parent_id = document.getElementById('newCatParent').value;
-        const description = document.getElementById('newCatDesc').value.trim();
+        const reason = document.getElementById('newCatDesc').value.trim();
         const btn = document.getElementById('saveCatBtn');
+        const alertBox = document.getElementById('catSuccessAlert');
 
-        if (!name) return;
+        if (!name || !reason) return;
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Submitting...';
 
         fetch('{{ route("vendor.categories.quick-store") }}', {
             method: 'POST',
@@ -773,43 +1057,47 @@
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ name, parent_id, description })
+            body: JSON.stringify({ name, parent_id, reason, description: reason })
         })
         .then(res => res.json())
         .then(data => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save & Auto-Select';
+            btn.innerHTML = '<i class="bi bi-send-check me-1"></i> Submit for Admin Verification';
             if (data.success) {
-                const select = document.getElementById('categorySelect');
-                const opt = new Option(data.category.name, data.category.id, true, true);
-                select.add(opt);
-                select.value = data.category.id;
+                alertBox.className = 'alert alert-success py-2 px-3 small border-0 mb-3';
+                alertBox.innerHTML = '<i class="bi bi-check-circle me-1"></i> ' + (data.message || 'Request submitted to Admin for verification.');
+                alertBox.classList.remove('d-none');
 
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
-                modal.hide();
-                document.getElementById('quickCategoryForm').reset();
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+                    if (modal) modal.hide();
+                    document.getElementById('quickCategoryForm').reset();
+                    alertBox.classList.add('d-none');
+                }, 2200);
             } else {
-                alert('Error creating category: ' + (data.message || 'Unknown error'));
+                alert('Submission failed: ' + (data.message || 'Unknown error'));
             }
         })
         .catch(err => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save & Auto-Select';
+            btn.innerHTML = '<i class="bi bi-send-check me-1"></i> Submit for Admin Verification';
             alert('Request failed: ' + err.message);
         });
     }
 
-    // 6. Quick AJAX Brand Submission
+    // 6. Quick AJAX Brand Request Submission
     function submitQuickBrand(e) {
         e.preventDefault();
         const name = document.getElementById('newBrandName').value.trim();
         const origin = document.getElementById('newBrandOrigin').value.trim();
         const website = document.getElementById('newBrandWebsite').value.trim();
+        const reason = document.getElementById('newBrandDesc').value.trim();
         const btn = document.getElementById('saveBrandBtn');
+        const alertBox = document.getElementById('brandSuccessAlert');
 
-        if (!name) return;
+        if (!name || !reason) return;
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Submitting...';
 
         fetch('{{ route("vendor.brands.quick-store") }}', {
             method: 'POST',
@@ -817,31 +1105,73 @@
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ name, country_of_origin: origin, website })
+            body: JSON.stringify({ name, country_of_origin: origin, website, reason, description: reason })
         })
         .then(res => res.json())
         .then(data => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save & Auto-Select';
+            btn.innerHTML = '<i class="bi bi-send-check me-1"></i> Submit for Admin Verification';
             if (data.success) {
-                const select = document.getElementById('brandSelect');
-                const opt = new Option(data.brand.name, data.brand.id, true, true);
-                select.add(opt);
-                select.value = data.brand.id;
+                alertBox.className = 'alert alert-success py-2 px-3 small border-0 mb-3';
+                alertBox.innerHTML = '<i class="bi bi-check-circle me-1"></i> ' + (data.message || 'Request submitted to Admin for verification.');
+                alertBox.classList.remove('d-none');
 
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addBrandModal'));
-                modal.hide();
-                document.getElementById('quickBrandForm').reset();
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addBrandModal'));
+                    if (modal) modal.hide();
+                    document.getElementById('quickBrandForm').reset();
+                    alertBox.classList.add('d-none');
+                }, 2200);
             } else {
-                alert('Error creating brand: ' + (data.message || 'Unknown error'));
+                alert('Submission failed: ' + (data.message || 'Unknown error'));
             }
         })
         .catch(err => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save & Auto-Select';
+            btn.innerHTML = '<i class="bi bi-send-check me-1"></i> Submit for Admin Verification';
             alert('Request failed: ' + err.message);
         });
     }
+
+    // 7. Check Brand Protection & Selling Rights
+    function checkBrandProtection(select) {
+        if (!select) select = document.getElementById('brandSelect');
+        if (!select) return;
+
+        const option = select.options[select.selectedIndex];
+        const isProtected = option && option.getAttribute('data-protected') === '1';
+        const isAllowed = option && option.getAttribute('data-allowed') === '1';
+        const noticeWarn = document.getElementById('brandProtectionNotice');
+        const noticeOk = document.getElementById('brandVerifiedNotice');
+
+        if (!noticeWarn || !noticeOk) return;
+
+        if (!select.value) {
+            noticeWarn.classList.add('d-none');
+            noticeOk.classList.add('d-none');
+            return;
+        }
+
+        if (isProtected) {
+            if (!isAllowed) {
+                noticeWarn.classList.remove('d-none');
+                noticeOk.classList.add('d-none');
+            } else {
+                noticeWarn.classList.add('d-none');
+                noticeOk.classList.remove('d-none');
+            }
+        } else {
+            noticeWarn.classList.add('d-none');
+            noticeOk.classList.add('d-none');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const brandSel = document.getElementById('brandSelect');
+        if (brandSel && brandSel.value) {
+            checkBrandProtection(brandSel);
+        }
+    });
 </script>
 @endpush
 @endsection

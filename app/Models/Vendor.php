@@ -16,7 +16,7 @@ class Vendor extends Authenticatable
     protected $fillable = [
         'name', 'email', 'phone', 'password', 'must_change_password',
         'company_name', 'company_slug', 'company_logo', 'company_banner',
-        'company_description', 'company_website', 'business_type', 'year_established',
+        'company_description', 'company_website', 'business_type', 'vendor_type', 'year_established',
         'gstin', 'pan_number',
         'primary_dispatch_warehouse_id', 'primary_dispatch_state',
         'dispatch_time_type', 'custom_dispatch_min_days', 'custom_dispatch_max_days', 'custom_dispatch_notes',
@@ -129,7 +129,7 @@ class Vendor extends Authenticatable
 
     public function quotations()
     {
-        return $this->hasMany(Quotation::class);
+        return $this->hasMany(Quotation::class)->latest();
     }
 
     public function coupons()
@@ -288,6 +288,11 @@ class Vendor extends Authenticatable
         return $brandModel->canVendorSell($this);
     }
 
+    public function isBrandOwner(): bool
+    {
+        return $this->vendor_type === 'brand_owner' || $this->ownedBrands()->exists();
+    }
+
     public function getCertificateUrlAttribute(): ?string
     {
         return $this->activeCertificate?->verification_url;
@@ -369,4 +374,32 @@ class Vendor extends Authenticatable
             'rating_count' => $count,
         ]);
     }
+
+    /**
+     * Relationship: Sample Requests received by this vendor
+     */
+    public function sampleRequests()
+    {
+        return $this->hasMany(SampleRequest::class)->latest();
+    }
+
+    public function pendingQuotationsCount(): int
+    {
+        return $this->quotations()->whereIn('status', ['pending', 'new'])->count();
+    }
+
+    /**
+     * Helper: Sample-to-Bulk Conversion Rate (%)
+     */
+    public function getSampleConversionRate(): float
+    {
+        $totalDeliveredOrConverted = $this->sampleRequests()->whereIn('status', ['delivered', 'converted_to_order'])->count();
+        if ($totalDeliveredOrConverted === 0) {
+            return 0.0;
+        }
+
+        $converted = $this->sampleRequests()->where('status', 'converted_to_order')->count();
+        return round(($converted / $totalDeliveredOrConverted) * 100, 1);
+    }
 }
+

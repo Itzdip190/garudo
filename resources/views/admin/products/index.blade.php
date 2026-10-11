@@ -11,36 +11,52 @@
 </div>
 
 <!-- ---------------- STATS PILLS ---------------- -->
-<div class="row g-3 mb-3">
-    <div class="col-6 col-md-3">
+<div class="row g-2 mb-3">
+    <div class="col-6 col-md-3 col-lg-2">
         <a href="{{ route('admin.products.index') }}" class="text-decoration-none">
-            <div class="garudo-card p-3 {{ !request('status') && !request('deal_of_day') && !request('sponsored') && !request('featured') ? 'border-primary' : '' }}">
-                <div class="text-muted small fw-bold text-uppercase">Total Catalog</div>
-                <div class="fs-4 fw-bold text-dark mt-1">{{ $stats['total'] }}</div>
+            <div class="garudo-card p-2.5 h-100 {{ !request('status') && !request('deal_of_day') && !request('sponsored') && !request('featured') && !request('best_seller') && !request('trending') && !request('new_arrival') ? 'border-primary' : '' }}">
+                <div class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Total Catalog</div>
+                <div class="fs-5 fw-bold text-dark mt-1">{{ $stats['total'] }}</div>
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-3">
-        <a href="{{ route('admin.products.index', ['status' => 'pending']) }}" class="text-decoration-none">
-            <div class="garudo-card p-3 {{ request('status') === 'pending' ? 'border-danger' : '' }}">
-                <div class="text-danger small fw-bold text-uppercase">Pending Review</div>
-                <div class="fs-4 fw-bold text-danger mt-1">{{ $stats['pending'] }}</div>
+    <div class="col-6 col-md-3 col-lg-2">
+        <a href="{{ route('admin.products.index', ['featured' => '1']) }}" class="text-decoration-none">
+            <div class="garudo-card p-2.5 h-100 {{ request('featured') === '1' ? 'border-warning bg-warning-subtle' : '' }}">
+                <div class="text-warning-emphasis small fw-bold text-uppercase" style="font-size: 11px;"><i class="bi bi-star-fill text-warning me-1"></i> Top Rated</div>
+                <div class="fs-5 fw-bold text-dark mt-1">{{ $stats['featured_count'] ?? 0 }}</div>
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-3 col-lg-2">
+        <a href="{{ route('admin.products.index', ['best_seller' => '1']) }}" class="text-decoration-none">
+            <div class="garudo-card p-2.5 h-100 {{ request('best_seller') === '1' ? 'border-danger bg-danger-subtle' : '' }}">
+                <div class="text-danger small fw-bold text-uppercase" style="font-size: 11px;"><i class="bi bi-fire me-1"></i> Best Seller</div>
+                <div class="fs-5 fw-bold text-danger mt-1">{{ $stats['best_seller_count'] ?? 0 }}</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+        <a href="{{ route('admin.products.index', ['trending' => '1']) }}" class="text-decoration-none">
+            <div class="garudo-card p-2.5 h-100 {{ request('trending') === '1' ? 'border-info bg-info-subtle' : '' }}">
+                <div class="text-info-emphasis small fw-bold text-uppercase" style="font-size: 11px;"><i class="bi bi-graph-up-arrow me-1"></i> Trending</div>
+                <div class="fs-5 fw-bold text-info-emphasis mt-1">{{ $stats['trending_count'] ?? 0 }}</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+        <a href="{{ route('admin.products.index', ['new_arrival' => '1']) }}" class="text-decoration-none">
+            <div class="garudo-card p-2.5 h-100 {{ request('new_arrival') === '1' ? 'border-success bg-success-subtle' : '' }}">
+                <div class="text-success small fw-bold text-uppercase" style="font-size: 11px;"><i class="bi bi-sparkles me-1"></i> New Arrival</div>
+                <div class="fs-5 fw-bold text-success mt-1">{{ $stats['new_arrival_count'] ?? 0 }}</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
         <a href="{{ route('admin.products.index', ['deal_of_day' => '1']) }}" class="text-decoration-none">
-            <div class="garudo-card p-3 {{ request('deal_of_day') === '1' ? 'border-danger bg-danger-subtle' : '' }}">
-                <div class="text-danger small fw-bold text-uppercase"><i class="bi bi-fire me-1"></i> Deals of Day</div>
-                <div class="fs-4 fw-bold text-danger mt-1">{{ $stats['deals_count'] ?? 0 }}</div>
-            </div>
-        </a>
-    </div>
-    <div class="col-6 col-md-3">
-        <a href="{{ route('admin.products.index', ['sponsored' => '1']) }}" class="text-decoration-none">
-            <div class="garudo-card p-3 {{ request('sponsored') === '1' ? 'border-primary bg-primary-subtle' : '' }}">
-                <div class="text-primary small fw-bold text-uppercase"><i class="bi bi-award-fill me-1"></i> Sponsored Ads</div>
-                <div class="fs-4 fw-bold text-primary mt-1">{{ $stats['sponsored_count'] ?? 0 }}</div>
+            <div class="garudo-card p-2.5 h-100 {{ request('deal_of_day') === '1' ? 'border-dark bg-dark-subtle' : '' }}">
+                <div class="text-dark small fw-bold text-uppercase" style="font-size: 11px;"><i class="bi bi-tag-fill me-1"></i> Deals of Day</div>
+                <div class="fs-5 fw-bold text-dark mt-1">{{ $stats['deals_count'] ?? 0 }}</div>
             </div>
         </a>
     </div>
@@ -124,28 +140,52 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="d-flex align-items-center gap-1">
+                                <div class="d-flex flex-wrap align-items-center gap-1" style="max-width: 320px;">
+                                    <!-- Top Rated / Featured Toggle -->
+                                    <form action="{{ route('admin.products.toggle_featured', $product->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-xs px-2 py-0.5 rounded-pill border {{ $product->is_featured ? 'btn-warning text-dark fw-bold' : 'btn-light text-muted' }}" title="{{ $product->is_featured ? 'Remove from Top Rated' : 'Show in Homepage [Top Rated] Section' }}" style="font-size: 10.5px;">
+                                            <i class="bi bi-star-fill text-warning"></i> Top Rated
+                                        </button>
+                                    </form>
+
+                                    <!-- Best Seller / Most Sold Toggle -->
+                                    <form action="{{ route('admin.products.toggle_best_seller', $product->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-xs px-2 py-0.5 rounded-pill border {{ $product->is_best_seller ? 'btn-danger text-white fw-bold' : 'btn-light text-muted' }}" title="{{ $product->is_best_seller ? 'Remove from Best Sellers' : 'Show in Homepage [Most Sold / Best Seller] Section' }}" style="font-size: 10.5px;">
+                                            <i class="bi bi-fire"></i> Best Seller
+                                        </button>
+                                    </form>
+
+                                    <!-- Trending Toggle -->
+                                    <form action="{{ route('admin.products.toggle_trending', $product->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-xs px-2 py-0.5 rounded-pill border {{ $product->is_trending ? 'btn-info text-white fw-bold' : 'btn-light text-muted' }}" title="{{ $product->is_trending ? 'Remove from Trending' : 'Show in Homepage [Trending] Section' }}" style="font-size: 10.5px;">
+                                            <i class="bi bi-graph-up-arrow"></i> Trending
+                                        </button>
+                                    </form>
+
+                                    <!-- New Arrival Toggle -->
+                                    <form action="{{ route('admin.products.toggle_new_arrival', $product->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-xs px-2 py-0.5 rounded-pill border {{ $product->is_new_arrival ? 'btn-success text-white fw-bold' : 'btn-light text-muted' }}" title="{{ $product->is_new_arrival ? 'Remove from New Arrivals' : 'Show in Homepage [New Arrivals] Section' }}" style="font-size: 10.5px;">
+                                            <i class="bi bi-sparkles"></i> New
+                                        </button>
+                                    </form>
+
                                     <!-- Deal of Day Toggle -->
                                     <form action="{{ route('admin.products.toggle_deal_of_day', $product->id) }}" method="POST" class="d-inline">
                                         @csrf
-                                        <button type="submit" class="btn btn-xs px-2 py-1 rounded-pill border {{ $product->is_deal_of_the_day ? 'btn-danger text-white' : 'btn-light text-muted' }}" title="{{ $product->is_deal_of_the_day ? 'Remove from Deals of the Day' : 'Promote to Deals of the Day' }}" style="font-size: 11px;">
-                                            <i class="bi bi-fire"></i> Deal
+                                        <button type="submit" class="btn btn-xs px-1.5 py-0.5 rounded-pill border {{ $product->is_deal_of_the_day ? 'btn-dark text-white fw-bold' : 'btn-light text-muted' }}" title="{{ $product->is_deal_of_the_day ? 'Remove from Deals' : 'Promote to Deal of the Day' }}" style="font-size: 10px;">
+                                            <i class="bi bi-tag-fill"></i> Deal
                                         </button>
                                     </form>
 
                                     <!-- Sponsored Toggle -->
                                     <form action="{{ route('admin.products.toggle_sponsored', $product->id) }}" method="POST" class="d-inline">
                                         @csrf
-                                        <button type="submit" class="btn btn-xs px-2 py-1 rounded-pill border {{ $product->is_sponsored ? 'btn-primary text-white' : 'btn-light text-muted' }}" title="{{ $product->is_sponsored ? 'Remove from Sponsored Ad' : 'Promote to Sponsored Showcase' }}" style="font-size: 11px;">
-                                            <i class="bi bi-award-fill"></i> Sponsor
-                                        </button>
-                                    </form>
-
-                                    <!-- Featured Toggle -->
-                                    <form action="{{ route('admin.products.toggle_featured', $product->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-xs px-2 py-1 rounded-pill border {{ $product->is_featured ? 'btn-warning text-dark' : 'btn-light text-muted' }}" title="{{ $product->is_featured ? 'Remove Featured' : 'Mark as Featured' }}" style="font-size: 11px;">
-                                            <i class="bi bi-star-fill"></i>
+                                        <button type="submit" class="btn btn-xs px-1.5 py-0.5 rounded-pill border {{ $product->is_sponsored ? 'btn-primary text-white fw-bold' : 'btn-light text-muted' }}" title="{{ $product->is_sponsored ? 'Remove Sponsored' : 'Mark as Sponsored' }}" style="font-size: 10px;">
+                                            <i class="bi bi-award-fill"></i> Ad
                                         </button>
                                     </form>
                                 </div>

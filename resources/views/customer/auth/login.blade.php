@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Login - GARUDO B2B Marketplace</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -87,19 +88,8 @@
     <div class="auth-card">
         
         <!-- Logo -->
-        <a href="{{ route('home') }}" class="brand-logo-wrap">
-            <div class="d-flex align-items-center justify-content-center" style="color: var(--garudo-primary);">
-                <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 14C14 14 20 18 22 24C16 23 10 20 6 14Z" fill="#0B4D3C"/>
-                    <path d="M8 20C16 20 22 24 24 30C18 29 12 26 8 20Z" fill="#0B4D3C"/>
-                    <path d="M12 26C18 26 24 29 26 35C20 34 15 31 12 26Z" fill="#0B4D3C"/>
-                    <path d="M22 24C26 16 34 12 42 12C36 18 30 22 24 30C23 27 22 25 22 24Z" fill="#0B4D3C"/>
-                </svg>
-            </div>
-            <div class="d-flex flex-column text-start">
-                <span class="brand-name">GARUDO</span>
-                <span class="brand-tagline">BUILD BETTER. TOGETHER.</span>
-            </div>
+        <a href="{{ route('home') }}" class="brand-logo-wrap text-decoration-none justify-content-center mb-3" title="Garudo B2B Marketplace">
+            <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 52px; max-width: 230px; object-fit: contain;">
         </a>
 
         <!-- Portal Switcher Tabs -->
@@ -131,7 +121,7 @@
             </div>
         @endif
 
-        <form action="{{ route('customer.login.submit') }}" method="POST">
+        <form action="{{ request()->getHost() === 'customer.garudo.in' ? url('/login') : route('customer.login.submit') }}" method="POST">
             @csrf
             
             <div class="mb-3">
@@ -167,7 +157,7 @@
             <div class="text-center pt-2 border-top">
                 <p class="text-muted mb-2" style="font-size: 0.82rem;">
                     Don't have a customer account? 
-                    <a href="{{ route('customer.register') }}" class="fw-bold text-decoration-none" style="color: var(--garudo-primary);">Create Account</a>
+                    <a href="{{ request()->getHost() === 'customer.garudo.in' ? url('/register') : route('customer.register') }}" class="fw-bold text-decoration-none" style="color: var(--garudo-primary);">Create Account</a>
                 </p>
                 <div class="p-2 rounded-3 mt-2" style="background: #F0FDF4; border: 1px dashed #BBF7D0;">
                     <p class="mb-1 text-muted" style="font-size: 0.78rem;">

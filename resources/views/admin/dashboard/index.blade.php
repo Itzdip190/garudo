@@ -18,6 +18,125 @@
     </div>
 </div>
 
+<!-- ---------------- STOREFRONT LAUNCH CONTROL & HEADER TAGLINE WIDGET ---------------- -->
+<div class="garudo-card p-4 mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0b1120 0%, #1e1b4b 60%, #0f172a 100%); border-radius: 16px; position: relative; overflow: hidden; border: 1px solid rgba(245, 158, 11, 0.25) !important;">
+    <!-- Subtle glow orb -->
+    <div style="position: absolute; right: -30px; top: -30px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; pointer-events: none;"></div>
+
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 position-relative" style="z-index: 1;">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 56px; height: 56px; background: rgba(245, 158, 11, 0.15); border: 1.5px solid rgba(245, 158, 11, 0.45); box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);">
+                <i class="bi bi-rocket-takeoff-fill fs-3 text-warning"></i>
+            </div>
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <h5 class="fw-bold text-white mb-0">Storefront Launch Control & Header Tagline</h5>
+                    <span id="launchStatusBadge" class="badge {{ ($launchSettings['launch_mode_active'] ?? '1') == '1' ? 'bg-warning text-dark' : 'bg-success text-white' }} px-2.5 py-1 fw-bold rounded-pill" style="font-size: 11px;">
+                        <i class="bi {{ ($launchSettings['launch_mode_active'] ?? '1') == '1' ? 'bi-hourglass-split' : 'bi-check-circle-fill' }} me-1"></i>
+                        {{ ($launchSettings['launch_mode_active'] ?? '1') == '1' ? 'PRE-LAUNCH MODE ACTIVE' : 'LIVE MARKETPLACE (PURCHASING ACTIVE)' }}
+                    </span>
+                </div>
+                <p id="launchStatusDescription" class="text-white-50 mb-0 small" style="max-width: 680px;">
+                    @if(($launchSettings['launch_mode_active'] ?? '1') == '1')
+                        Official Launching on <strong>{{ $launchSettings['launch_date'] ?? '20th October' }}</strong>. Launch banner strip is visible on website. Product purchases & checkout display launch notice.
+                    @else
+                        Storefront is officially LIVE! Launch announcement strip is hidden, and full product purchasing & checkout are enabled.
+                    @endif
+                </p>
+                <div class="d-flex align-items-center gap-3 mt-2 text-white-50 small flex-wrap">
+                    <span><i class="bi bi-tag-fill text-warning me-1"></i> Header Tagline: <strong class="text-white">{{ $launchSettings['header_tagline'] ?? "India's Leading B2B Commerce & Wholesale Network" }}</strong></span>
+                    <span><i class="bi bi-calendar-event text-warning me-1"></i> Launch Date: <strong class="text-white">{{ $launchSettings['launch_date'] ?? '20th October' }}</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2.5 flex-wrap">
+            <!-- Toggle Switch Container -->
+            <div class="d-flex align-items-center gap-2 bg-dark bg-opacity-60 px-3 py-2 rounded-3 border border-secondary border-opacity-30 shadow-sm">
+                <span class="text-white small fw-bold">Pre-Launch Mode:</span>
+                <div class="form-check form-switch m-0 d-flex align-items-center">
+                    <input class="form-check-input" type="checkbox" role="switch" id="dashboardLaunchToggle" style="width: 2.85em; height: 1.45em; cursor: pointer;" {{ ($launchSettings['launch_mode_active'] ?? '1') == '1' ? 'checked' : '' }}>
+                </div>
+                <span id="toggleStateLabel" class="small fw-bold {{ ($launchSettings['launch_mode_active'] ?? '1') == '1' ? 'text-warning' : 'text-success' }}" style="min-width: 28px;">
+                    {{ ($launchSettings['launch_mode_active'] ?? '1') == '1' ? 'ON' : 'OFF' }}
+                </span>
+            </div>
+
+            <!-- Settings / Edit Modal Trigger -->
+            <button type="button" class="btn btn-warning text-dark fw-bold btn-sm px-3 py-2 rounded-3 shadow-sm d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#editLaunchSettingsModal">
+                <i class="bi bi-sliders"></i> Edit Date & Tagline
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Edit Launch Settings & Header Taglines -->
+<div class="modal fade" id="editLaunchSettingsModal" tabindex="-1" aria-labelledby="editLaunchSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form action="{{ route('admin.launch-mode.update') }}" method="POST" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            @csrf
+            <div class="modal-header bg-dark text-white border-0 py-3 px-4" style="background: linear-gradient(135deg, #0b1120 0%, #1e1b4b 100%) !important;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-rocket-takeoff-fill text-warning fs-5"></i>
+                    <h5 class="modal-title fw-bold text-white mb-0" id="editLaunchSettingsModalLabel">Configure Storefront Launch & Header Tagline</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="bg-white p-3 rounded-3 border mb-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <label class="form-label fw-bold text-dark mb-0">Pre-Launch Mode Status</label>
+                            <div class="text-muted small">When ON: strip is displayed & product purchases display launch notice. When OFF: strip is hidden & direct purchasing starts.</div>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" name="launch_mode_active" value="1" id="modalLaunchModeSwitch" style="width: 2.8em; height: 1.4em; cursor: pointer;" {{ ($launchSettings['launch_mode_active'] ?? '1') == '1' ? 'checked' : '' }}>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark">Official Launch Date</label>
+                        <input type="text" name="launch_date" class="form-control" value="{{ old('launch_date', $launchSettings['launch_date'] ?? '20th October') }}" placeholder="e.g. 20th October 2026" required>
+                        <small class="text-muted">Displayed across top strip and product launch notices.</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark">Header Tagline (Desktop)</label>
+                        <input type="text" name="header_tagline" class="form-control" value="{{ old('header_tagline', $launchSettings['header_tagline'] ?? "India's Leading B2B Commerce & Wholesale Network") }}" placeholder="Tagline without building material" required>
+                        <small class="text-muted">Replaces old header tagline in top bar.</small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Header Tagline (Mobile)</label>
+                    <input type="text" name="header_tagline_mobile" class="form-control" value="{{ old('header_tagline_mobile', $launchSettings['header_tagline_mobile'] ?? "India's #1 B2B Commerce & Wholesale Network") }}" placeholder="Compact mobile tagline" required>
+                    <small class="text-muted">Displayed on mobile screens (&lt; 992px).</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Top Strip Announcement Message</label>
+                    <input type="text" name="launch_strip_text" class="form-control" value="{{ old('launch_strip_text', $launchSettings['launch_strip_text'] ?? 'Official Launching on 20th October | Pre-Launch Preview Active') }}" required>
+                    <small class="text-muted">Text shown inside the top gradient banner ribbon.</small>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fw-bold text-dark">Pre-Launch Notice Message (When purchasing/buying)</label>
+                    <textarea name="launch_notice_message" class="form-control" rows="2" required>{{ old('launch_notice_message', $launchSettings['launch_notice_message'] ?? 'Official Launching on 20th October. Direct order purchasing will start on our official launch day!') }}</textarea>
+                    <small class="text-muted">Shown in modal when customer attempts to buy or checkout before official launch.</small>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-top py-3 px-4">
+                <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-warning fw-bold text-dark px-4 shadow-sm">
+                    <i class="bi bi-check2-circle me-1"></i> Save Launch & Tagline Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- ---------------- KPI STATS GRID ---------------- -->
 <div class="row g-3 mb-4">
     <!-- GMV -->
@@ -424,6 +543,65 @@
                 cutout: '70%'
             }
         });
+
+        // Pre-Launch Mode Instant Switcher
+        const launchToggle = document.getElementById('dashboardLaunchToggle');
+        if (launchToggle) {
+            launchToggle.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const badge = document.getElementById('launchStatusBadge');
+                const desc = document.getElementById('launchStatusDescription');
+                const label = document.getElementById('toggleStateLabel');
+                const modalSwitch = document.getElementById('modalLaunchModeSwitch');
+
+                if (modalSwitch) modalSwitch.checked = isChecked;
+                if (label) {
+                    label.textContent = isChecked ? 'ON' : 'OFF';
+                    label.className = 'small fw-bold ' + (isChecked ? 'text-warning' : 'text-success');
+                }
+
+                // Send AJAX toggle request
+                fetch("{{ route('admin.launch-mode.toggle') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ active: isChecked ? 1 : 0 })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        if (isChecked) {
+                            if (badge) {
+                                badge.className = 'badge bg-warning text-dark px-2.5 py-1 fw-bold rounded-pill';
+                                badge.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> PRE-LAUNCH MODE ACTIVE';
+                            }
+                            if (desc) {
+                                desc.innerHTML = 'Official Launching on <strong>{{ $launchSettings['launch_date'] ?? '20th October' }}</strong>. Launch banner strip is visible on website. Product purchases & checkout display launch notice.';
+                            }
+                        } else {
+                            if (badge) {
+                                badge.className = 'badge bg-success text-white px-2.5 py-1 fw-bold rounded-pill';
+                                badge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> LIVE MARKETPLACE (PURCHASING ACTIVE)';
+                            }
+                            if (desc) {
+                                desc.innerHTML = 'Storefront is officially LIVE! Launch announcement strip is hidden, and full product purchasing & checkout are enabled.';
+                            }
+                        }
+                    } else {
+                        alert(d.message || 'Failed to update launch mode.');
+                        location.reload();
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Network error while toggling launch mode.');
+                    location.reload();
+                });
+            });
+        }
     });
 </script>
 @endpush

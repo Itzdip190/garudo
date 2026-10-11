@@ -154,9 +154,22 @@
                     </div>
 
                     <div class="d-grid gap-2">
-                        <a href="{{ route('customer.orders') }}" class="btn btn-yellow fw-bold py-2.5 rounded-3 text-dark shadow-sm">
-                            <i class="bi bi-shield-check me-1"></i> Proceed to Secure Checkout
-                        </a>
+                        @if(($launchSettings['launch_mode_active'] ?? '1') == '1')
+                            <div class="alert alert-warning border-warning border-opacity-40 rounded-3 p-3 mb-2 d-flex align-items-center gap-2.5 shadow-xs">
+                                <i class="bi bi-rocket-takeoff-fill text-warning fs-4 flex-shrink-0 animate-rocket"></i>
+                                <div style="font-size: 12.5px;">
+                                    <strong class="text-dark d-block">Official Launching on {{ $launchSettings['launch_date'] ?? '20th October' }}</strong>
+                                    <span class="text-muted">Online checkout will go live on our official launch day.</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-warning fw-bold py-2.5 rounded-3 text-dark shadow-sm" onclick="showPreLaunchModal();">
+                                <i class="bi bi-lock-fill me-1"></i> Checkout Opens on {{ $launchSettings['launch_date'] ?? '20th October' }}
+                            </button>
+                        @else
+                            <a href="{{ route('customer.orders') }}" class="btn btn-yellow fw-bold py-2.5 rounded-3 text-dark shadow-sm">
+                                <i class="bi bi-shield-check me-1"></i> Proceed to Secure Checkout
+                            </a>
+                        @endif
                         <button type="button" class="btn btn-outline-primary fw-bold py-2.5 rounded-3" data-bs-toggle="modal" data-bs-target="#bulkQuoteModal">
                             <i class="bi bi-lightning-charge-fill me-1"></i> Request Bulk Order Discount
                         </button>

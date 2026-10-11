@@ -136,19 +136,88 @@ class CustomerDashboardController extends Controller
     /**
      * Quotes (RFQ)
      */
-    public function quotes()
+    public function quotes(Request $request)
     {
         $customer = $this->getCustomer();
         if (!$customer) {
             return redirect()->route('customer.login');
         }
 
-        $quotes = Quotation::where('customer_id', $customer->id)
-            ->with(['vendor', 'product'])
-            ->latest()
-            ->paginate(10);
+        $status = $request->query('status', 'all');
 
-        return view('customer.quotes.index', compact('customer', 'quotes'));
+        $query = Quotation::where('customer_id', $customer->id)
+            ->with(['vendor', 'product.primaryImage', 'convertedOrder'])
+            ->latest();
+
+        if ($status !== 'all') {
+            if ($status === 'pending') {
+                $query->whereIn('status', ['pending', 'new']);
+            } elseif ($status === 'quoted') {
+                $query->whereIn('status', ['sent', 'quoted', 'viewed']);
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        $quotes = $query->paginate(10);
+
+        $counts = [
+            'all'       => Quotation::where('customer_id', $customer->id)->count(),
+            'pending'   => Quotation::where('customer_id', $customer->id)->whereIn('status', ['pending', 'new'])->count(),
+            'quoted'    => Quotation::where('customer_id', $customer->id)->whereIn('status', ['sent', 'quoted', 'viewed'])->count(),
+            'accepted'  => Quotation::where('customer_id', $customer->id)->where('status', 'accepted')->count(),
+            'converted' => Quotation::where('customer_id', $customer->id)->where('status', 'converted_to_order')->count(),
+        ];
+
+        return view('customer.quotes.index', compact('customer', 'quotes', 'counts', 'status'));
+    }
+
+    /**
+     * Customer: Accept Vendor Commercial Proposal
+     */
+    public function acceptQuote(Request $request, $id)
+    {
+        $customer = $this->getCustomer();
+        if (!$customer) {
+            return redirect()->route('customer.login');
+        }
+
+        $quotation = Quotation::where('customer_id', $customer->id)->findOrFail($id);
+
+        if (!in_array($quotation->status, ['sent', 'quoted', 'viewed'])) {
+            return back()->with('error', 'Only quotations with submitted price proposals can be accepted.');
+        }
+
+        $quotation->update([
+            'status' => 'accepted',
+        ]);
+
+        // Notify Vendor and Super Admin
+        \App\Services\VendorNotificationService::sendQuotationAcceptedNotification($quotation);
+
+        return back()->with('success', "Quotation #{$quotation->quotation_number} proposal accepted! The vendor will contact you to finalize dispatch.");
+    }
+
+    /**
+     * Customer: Decline / Reject Vendor Proposal
+     */
+    public function rejectQuote(Request $request, $id)
+    {
+        $customer = $this->getCustomer();
+        if (!$customer) {
+            return redirect()->route('customer.login');
+        }
+
+        $quotation = Quotation::where('customer_id', $customer->id)->findOrFail($id);
+
+        $reason = $request->input('rejection_reason', 'Declined by buyer');
+
+        $quotation->update([
+            'status'           => 'rejected',
+            'rejection_reason' => $reason,
+        ]);
+
+        return back()->with('success', "Quotation #{$quotation->quotation_number} has been declined.");
     }
 
     /**

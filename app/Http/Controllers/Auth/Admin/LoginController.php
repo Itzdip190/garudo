@@ -21,6 +21,22 @@ class LoginController extends Controller
         ]);
 
         if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
+            $admin = Auth::guard('admin')->user();
+
+            if ($admin->status !== 'active') {
+                Auth::guard('admin')->logout();
+                return back()->withErrors([
+                    'email' => 'Your staff/subadmin account is currently inactive or suspended. Please contact the Super Administrator.',
+                ])->onlyInput('email');
+            }
+
+            try {
+                $admin->update([
+                    'last_login_at' => now(),
+                    'last_login_ip' => $request->ip(),
+                ]);
+            } catch (\Throwable $e) {}
+
             $request->session()->regenerate();
             return redirect()->intended(route('admin.dashboard'));
         }

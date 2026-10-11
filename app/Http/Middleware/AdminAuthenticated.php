@@ -15,6 +15,12 @@ class AdminAuthenticated
             return redirect()->route('admin.login')->with('error', 'Please login to access the Admin Panel.');
         }
 
+        $admin = Auth::guard('admin')->user();
+        if ($admin && $admin->status !== 'active') {
+            Auth::guard('admin')->logout();
+            return redirect()->route('admin.login')->with('error', 'Your account has been deactivated. Please contact the Super Administrator.');
+        }
+
         return $next($request);
     }
 }

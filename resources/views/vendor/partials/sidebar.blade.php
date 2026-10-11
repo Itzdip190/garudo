@@ -89,10 +89,9 @@
                     <li><a href="{{ route('vendor.products.bulk') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.products.bulk') ? 'active' : '' }}"><i class="bi bi-cloud-arrow-up me-1"></i>Bulk & Backup</a></li>
                     <li><a href="{{ route('vendor.products.logistics-policy') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.products.logistics-policy') ? 'active' : '' }}"><i class="bi bi-truck me-1 text-primary"></i>F.O.R. Logistics Policy</a></li>
                     <li><a href="{{ route('vendor.brand-registry.index') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.brand-registry.*') ? 'active' : '' }}"><i class="bi bi-award me-1 text-warning"></i>Brand Registry</a></li>
-                    <li><a href="{{ route('vendor.dealer-authorizations.index') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.dealer-authorizations.*') ? 'active' : '' }}"><i class="bi bi-diagram-3 me-1 text-success"></i>Dealership Authorizations</a></li>
-                    <li><a href="{{ route('vendor.brands') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.brands') ? 'active' : '' }}">Brands Directory</a></li>
-                    <li><a href="{{ route('vendor.categories') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.categories') ? 'active' : '' }}">Categories</a></li>
-                    <li><a href="{{ route('vendor.attributes') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.attributes') ? 'active' : '' }}">Attributes</a></li>
+                    <li><a href="{{ route('vendor.brands') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.brands') ? 'active' : '' }}"><i class="bi bi-patch-check me-1 text-primary"></i>Brands & Requests</a></li>
+                    <li><a href="{{ route('vendor.categories') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.categories') ? 'active' : '' }}"><i class="bi bi-diagram-3 me-1 text-success"></i>Categories & Requests</a></li>
+                    <li><a href="{{ route('vendor.attributes') }}" class="sidebar-submenu-link {{ request()->routeIs('vendor.attributes') ? 'active' : '' }}"><i class="bi bi-sliders me-1 text-secondary"></i>Attributes & Specs</a></li>
                 </ul>
             </div>
         </li>
@@ -106,6 +105,24 @@
                 </div>
                 @if(isset($stats['pending_orders']) && $stats['pending_orders'] > 0)
                     <span class="badge-sidebar badge-sidebar-red">{{ $stats['pending_orders'] }}</span>
+                @endif
+            </a>
+        </li>
+
+        <!-- Product Samples & Trials -->
+        <li>
+            <a href="{{ route('vendor.samples.index') }}" class="sidebar-item-link {{ request()->routeIs('vendor.samples.*') ? 'active' : '' }}">
+                <div class="menu-main-content">
+                    <i class="bi bi-box2-heart{{ request()->routeIs('vendor.samples.*') ? '-fill' : '' }} menu-icon text-success"></i>
+                    <span>Sample Requests</span>
+                </div>
+                @php
+                    $pendingSamplesCount = auth('vendor')->check() && \Illuminate\Support\Facades\Schema::hasTable('sample_requests')
+                        ? auth('vendor')->user()->sampleRequests()->where('status', 'pending')->count()
+                        : 0;
+                @endphp
+                @if($pendingSamplesCount > 0)
+                    <span class="badge-sidebar badge-sidebar-red">{{ $pendingSamplesCount }}</span>
                 @endif
             </a>
         </li>
@@ -127,11 +144,16 @@
         <li>
             <a href="{{ route('vendor.quotations.index') }}" class="sidebar-item-link {{ request()->routeIs('vendor.quotations.*') ? 'active' : '' }}">
                 <div class="menu-main-content">
-                    <i class="bi bi-file-earmark-text menu-icon"></i>
-                    <span>Quotations</span>
+                    <i class="bi bi-file-earmark-text{{ request()->routeIs('vendor.quotations.*') ? '-fill text-primary' : '' }} menu-icon"></i>
+                    <span>Quotations & RFQs</span>
                 </div>
-                @if(isset($stats['quotations_count']) && $stats['quotations_count'] > 0)
-                    <span class="badge-sidebar badge-sidebar-red">{{ $stats['quotations_count'] }}</span>
+                @php
+                    $pendingVendorQuotes = auth('vendor')->check() && \Illuminate\Support\Facades\Schema::hasTable('quotations')
+                        ? auth('vendor')->user()->pendingQuotationsCount()
+                        : 0;
+                @endphp
+                @if($pendingVendorQuotes > 0)
+                    <span class="badge-sidebar badge-sidebar-red">{{ $pendingVendorQuotes }}</span>
                 @endif
             </a>
         </li>

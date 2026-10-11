@@ -4,6 +4,14 @@
  * Diagnostic tool to check PHP version, extensions, and exact error log on Hostinger
  */
 
+$secretKey = isset($_GET['secret']) ? $_GET['secret'] : null;
+$expectedSecret = getenv('MIGRATION_SECRET_KEY') ?: 'GarudoB2bDeploy2026SecretKeySecure!';
+
+if ($secretKey !== $expectedSecret) {
+    http_response_code(403);
+    die("<h1 style='color:red; font-family:sans-serif;'>403 Forbidden: Access Denied</h1>");
+}
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);

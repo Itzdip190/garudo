@@ -34,6 +34,23 @@ class CartController extends Controller
      */
     public function add(Request $request)
     {
+        // Enforce Pre-Launch Mode check if active
+        if (\App\Models\HomepageSetting::get('launch_mode_active', '1') === '1') {
+            $launchDate = \App\Models\HomepageSetting::get('launch_date', '20th October');
+            $launchNotice = \App\Models\HomepageSetting::get('launch_notice_message', "Official Launching on {$launchDate}! Product purchasing will open on launch day.");
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'is_launch_mode' => true,
+                    'launch_date' => $launchDate,
+                    'message' => $launchNotice,
+                ], 403);
+            }
+
+            return back()->with('error', $launchNotice)->with('launch_notice', $launchNotice);
+        }
+
         $productId = $request->input('product_id');
         $quantity = $request->input('quantity', 1);
         $variantId = $request->input('variant_id');

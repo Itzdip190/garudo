@@ -97,6 +97,24 @@
                             <span class="badge bg-light text-muted border small">
                                 {{ $brand->products_count }} Products Listed
                             </span>
+
+                            @php
+                                $vendorName = null;
+                                if ($brand->ownerVendor) {
+                                    $vendorName = $brand->ownerVendor->shop_name ?: ($brand->ownerVendor->name ?: $brand->ownerVendor->company_name ?? null);
+                                } elseif ($brand->verifiedDealerAuthorizations && $brand->verifiedDealerAuthorizations->isNotEmpty()) {
+                                    $firstDealer = $brand->verifiedDealerAuthorizations->first();
+                                    if ($firstDealer && $firstDealer->vendor) {
+                                        $vendorName = $firstDealer->vendor->shop_name ?: ($firstDealer->vendor->name ?: $firstDealer->vendor->company_name ?? null);
+                                    }
+                                }
+                            @endphp
+                            <div class="w-100 mt-2 pt-2 border-top text-start">
+                                <div class="text-muted text-uppercase" style="font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px;">Vendor / Supplier</div>
+                                <div class="fw-semibold text-dark text-truncate" style="font-size: 11px;" title="{{ $vendorName ?: 'Garudo Verified Direct' }}">
+                                    <i class="bi bi-shop text-warning me-1"></i>{{ $vendorName ?: 'Garudo Verified Direct' }}
+                                </div>
+                            </div>
                         </div>
                     </a>
                 </div>

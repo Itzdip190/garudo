@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Garudo - B2B Building Materials Marketplace')</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -161,6 +163,24 @@
             position: sticky;
             top: 0;
             z-index: 1030;
+        }
+        .brand-logo-img {
+            height: 48px;
+            max-height: 52px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.2s ease;
+        }
+        .brand-logo-img:hover {
+            transform: scale(1.02);
+        }
+        @media (max-width: 576px) {
+            .brand-logo-img {
+                height: 38px;
+                max-width: 160px;
+            }
         }
         .brand-cube-logo {
             width: 42px;
@@ -647,33 +667,511 @@
             text-decoration: line-through;
         }
 
-        /* Footer styling */
+        /* Premium Footer Styling Matching Reference Image */
         .garudo-footer {
-            background-color: #081021;
+            background-color: #0b1322;
             color: #94a3b8;
-            font-size: 12px;
+            font-size: 13px;
         }
-        .garudo-footer h6 {
+        .footer-logo {
+            display: inline-flex;
+            align-items: baseline;
+            font-weight: 900;
+            font-size: 26px;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            line-height: 1;
+        }
+        .footer-logo-main {
+            color: #ffffff;
+        }
+        .footer-logo-dot {
+            color: #ff6a00;
+        }
+        .footer-tagline {
+            color: #8fa0b5;
+            font-size: 12.5px;
+            line-height: 1.6;
+            margin-top: 14px;
+            margin-bottom: 20px;
+            max-width: 320px;
+        }
+        .footer-alerts-box {
+            background: #111b2e;
+            border: 1px solid #1c2b45;
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 18px;
+            max-width: 340px;
+        }
+        .footer-alerts-title {
             color: #ffffff;
             font-weight: 700;
-            font-size: 13px;
-            margin-bottom: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 13.5px;
+            margin-bottom: 4px;
         }
-        .garudo-footer a {
+        .footer-alerts-sub {
+            color: #8fa0b5;
+            font-size: 11px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+        .footer-alerts-input {
+            background: #0b1322 !important;
+            border: 1px solid #243552 !important;
+            color: #ffffff !important;
+            font-size: 12px;
+            border-radius: 6px;
+            padding: 7px 12px;
+        }
+        .footer-alerts-input::placeholder {
+            color: #5d6f8a;
+        }
+        .footer-alerts-input:focus {
+            border-color: #ff6a00 !important;
+            box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.2) !important;
+        }
+        .footer-alerts-btn {
+            background: #ff6a00;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 12.5px;
+            border-radius: 6px;
+            padding: 7px 16px;
+            border: none;
+            white-space: nowrap;
+            transition: background 0.2s ease;
+        }
+        .footer-alerts-btn:hover {
+            background: #e65c00;
+            color: #ffffff;
+        }
+        .footer-pay-label {
+            color: #8fa0b5;
+            font-size: 11.5px;
+            margin-right: 6px;
+        }
+        .footer-pay-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #94a3b8;
-            text-decoration: none;
-            line-height: 2;
-            transition: color 0.15s;
+            font-size: 10.5px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 4px;
+            margin-bottom: 5px;
+            font-weight: 500;
         }
-        .garudo-footer a:hover {
-            color: var(--garudo-yellow);
+        .footer-social-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            text-decoration: none;
+            margin-right: 6px;
+            margin-top: 14px;
+            transition: all 0.2s ease;
+        }
+        .footer-social-btn:hover {
+            background: #ff6a00;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+        .footer-col-title {
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 14.5px;
+            margin-bottom: 18px;
+            letter-spacing: 0.2px;
+        }
+        .footer-links-list {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        .footer-links-list li {
+            margin-bottom: 9px;
+        }
+        .footer-links-list a {
+            color: #8fa0b5;
+            text-decoration: none;
+            font-size: 12.5px;
+            transition: color 0.15s ease, transform 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .footer-links-list a:hover {
+            color: #ffffff;
+            transform: translateX(2px);
+        }
+        .footer-arrow {
+            color: #ff6a00;
+            font-weight: 800;
+            font-size: 11px;
+            font-family: monospace, sans-serif;
+        }
+        .footer-contact-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .footer-contact-icon {
+            color: #ff6a00;
+            font-size: 15px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .footer-contact-title {
+            color: #ffffff;
+            font-size: 12.5px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .footer-contact-text {
+            color: #8fa0b5;
+            font-size: 11.5px;
+            margin-top: 2px;
+            line-height: 1.4;
+        }
+        .footer-app-btn {
+            background: #111b2e;
+            border: 1px solid #1f2f4a;
+            border-radius: 8px;
+            padding: 7px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            width: 155px;
+            transition: all 0.2s ease;
+        }
+        .footer-app-btn:hover {
+            background: #17243d;
+            border-color: #2b3e5e;
+            transform: translateY(-1px);
+        }
+        .footer-app-icon {
+            flex-shrink: 0;
+        }
+        .footer-app-text {
+            line-height: 1.15;
+        }
+        .footer-app-sub {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #8fa0b5;
+            text-transform: uppercase;
+            display: block;
+        }
+        .footer-app-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff;
+            display: block;
+        }
+        .footer-bottom-bar {
+            background: #060b14;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 16px 0;
+            margin-top: 40px;
+        }
+        .footer-bottom-text {
+            color: #718096;
+            font-size: 11.5px;
+            line-height: 1.6;
+        }
+        .footer-bottom-text a {
+            color: #8fa0b5;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+        .footer-bottom-text a:hover {
+            color: #ffffff;
+        }
+
+        /* ---------------- VIBRANT PRE-LAUNCH ANNOUNCEMENT TICKER STRIP ---------------- */
+        .garudo-launch-banner-strip {
+            background: linear-gradient(90deg, #ec4899 0%, #8b5cf6 20%, #3b82f6 40%, #10b981 60%, #f59e0b 80%, #ef4444 100%);
+            background-size: 300% 100%;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 4px 18px rgba(139, 92, 246, 0.4);
+            position: relative;
+            z-index: 1045;
+            animation: vibrantStripGradient 10s ease infinite;
+            overflow: hidden;
+        }
+
+        @keyframes vibrantStripGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .launch-strip-container {
+            display: flex;
+            align-items: center;
+            height: 38px;
+            padding: 0 16px;
+            gap: 14px;
+            position: relative;
+        }
+
+        .launch-strip-pinned-left {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+
+        .launch-pill-badge {
+            background: #ffffff;
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 11px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .launch-pill-badge .bi-rocket-takeoff-fill {
+            color: #ef4444;
+            font-size: 13px;
+        }
+
+        .animate-rocket {
+            display: inline-block;
+            animation: rocketFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes rocketFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(6deg); }
+        }
+
+        /* Continuous Smooth Scrolling Marquee */
+        .launch-marquee-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            white-space: nowrap;
+            mask-image: linear-gradient(to right, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
+        }
+
+        .launch-marquee-track {
+            display: inline-flex;
+            white-space: nowrap;
+            will-change: transform;
+            animation: marqueeAnnouncement 28s linear infinite;
+        }
+
+        .launch-marquee-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes marqueeAnnouncement {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .launch-marquee-content {
+            display: inline-flex;
+            align-items: center;
+            gap: 24px;
+            padding-right: 24px;
+        }
+
+        .ticker-item {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+            letter-spacing: 0.25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ticker-highlight {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            padding: 1px 8px;
+            border-radius: 999px;
+            font-weight: 800;
+            color: #ffedd5;
+        }
+
+        .ticker-sep {
+            color: #fef08a;
+            font-size: 13px;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 4px rgba(254, 240, 138, 0.6));
+        }
+
+        .launch-strip-pinned-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+
+        .launch-date-pill {
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #ffffff;
+            padding: 3.5px 12px;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .launch-dismiss-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .launch-dismiss-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .launch-strip-container {
+                padding: 0 10px;
+                gap: 8px;
+                height: 36px;
+            }
+            .launch-pill-badge {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+            .ticker-item {
+                font-size: 11.5px;
+            }
         }
     </style>
     @stack('styles')
 </head>
 <body>
+
+    @if(($launchSettings['launch_mode_active'] ?? '1') == '1')
+    <!-- Official Launch Announcement Scrolling Ticker Strip -->
+    <div id="garudoLaunchStrip" class="garudo-launch-banner-strip">
+        <div class="launch-strip-container">
+            <!-- Pinned Left Badge -->
+            <div class="launch-strip-pinned-left">
+                <span class="launch-pill-badge">
+                    <i class="bi bi-rocket-takeoff-fill animate-rocket"></i>
+                    <span>Official Launch</span>
+                </span>
+            </div>
+
+            <!-- Continuous Announcement Marquee -->
+            <div class="launch-marquee-wrapper" onclick="showPreLaunchModal();" style="cursor: pointer;" title="Click for details">
+                <div class="launch-marquee-track">
+                    <div class="launch-marquee-content">
+                        <span class="ticker-item">
+                            <i class="bi bi-megaphone-fill text-warning"></i>
+                            <span>{{ $launchSettings['launch_strip_text'] ?? 'Official Launching on 20th October | Pre-Launch Preview Active' }}</span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                        <span class="ticker-item">
+                            <i class="bi bi-calendar2-check-fill text-warning"></i>
+                            <span>Going Live on <span class="ticker-highlight">{{ $launchSettings['launch_date'] ?? '20th October' }}</span></span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                        <span class="ticker-item">
+                            <i class="bi bi-bag-check-fill text-warning"></i>
+                            <span>Online Direct Purchasing & Checkout Opens on <span class="ticker-highlight">{{ $launchSettings['launch_date'] ?? '20th October' }}</span>!</span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                        <span class="ticker-item">
+                            <i class="bi bi-heart-fill text-danger"></i>
+                            <span>Explore 10,000+ Products & Add to Wishlist for 1-Click Ordering!</span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                        <span class="ticker-item">
+                            <i class="bi bi-shield-check text-info"></i>
+                            <span>India's Leading B2B Commerce & Wholesale Platform</span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                    </div>
+
+                    <!-- Duplicate for infinite seamless scroll -->
+                    <div class="launch-marquee-content" aria-hidden="true">
+                        <span class="ticker-item">
+                            <i class="bi bi-megaphone-fill text-warning"></i>
+                            <span>{{ $launchSettings['launch_strip_text'] ?? 'Official Launching on 20th October | Pre-Launch Preview Active' }}</span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                        <span class="ticker-item">
+                            <i class="bi bi-calendar2-check-fill text-warning"></i>
+                            <span>Going Live on <span class="ticker-highlight">{{ $launchSettings['launch_date'] ?? '20th October' }}</span></span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                        <span class="ticker-item">
+                            <i class="bi bi-bag-check-fill text-warning"></i>
+                            <span>Online Direct Purchasing & Checkout Opens on <span class="ticker-highlight">{{ $launchSettings['launch_date'] ?? '20th October' }}</span>!</span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                        <span class="ticker-item">
+                            <i class="bi bi-heart-fill text-danger"></i>
+                            <span>Explore 10,000+ Products & Add to Wishlist for 1-Click Ordering!</span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                        <span class="ticker-item">
+                            <i class="bi bi-shield-check text-info"></i>
+                            <span>India's Leading B2B Commerce & Wholesale Platform</span>
+                        </span>
+                        <span class="ticker-sep">✦</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pinned Right Badge & Dismiss -->
+            <div class="launch-strip-pinned-right">
+                <span class="launch-date-pill d-none d-md-inline-flex">
+                    <i class="bi bi-calendar-event-fill me-1.5 text-warning"></i> Going Live: <strong>{{ $launchSettings['launch_date'] ?? '20th October' }}</strong>
+                </span>
+                <button type="button" class="launch-dismiss-btn" onclick="document.getElementById('garudoLaunchStrip').style.display='none';" title="Dismiss Announcement">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Top Utility Bar (Tier 1: Upgraded Height & Premium B2B Styling) -->
     <div class="top-utility-bar">
@@ -685,7 +1183,7 @@
                         <i class="bi bi-shield-fill-check"></i>
                     </span>
                     <span class="text-white fw-semibold" style="font-size: 12.5px; letter-spacing: 0.15px;">
-                        India's Most Trusted Building Material Marketplace
+                        {{ $launchSettings['header_tagline'] ?? "India's Leading B2B Commerce & Wholesale Network" }}
                     </span>
                     <span class="top-bar-badge ms-1">
                         <i class="bi bi-patch-check-fill text-warning me-1" style="font-size: 9.5px;"></i> B2B Verified
@@ -737,7 +1235,7 @@
                 <div class="d-flex align-items-center overflow-hidden me-2">
                     <span class="top-bar-badge-dot flex-shrink-0"></span>
                     <span class="text-white fw-medium text-truncate" style="font-size: 11px; letter-spacing: 0.1px;">
-                        India's #1 Building Material Marketplace
+                        {{ $launchSettings['header_tagline_mobile'] ?? "India's #1 B2B Commerce & Wholesale Network" }}
                     </span>
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-shrink-0" style="font-size: 11px;">
@@ -782,26 +1280,8 @@
                         <button class="btn btn-sm btn-light border-0 p-1 me-1.5 d-lg-none text-dark" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileCategoriesOffcanvas" aria-controls="mobileCategoriesOffcanvas" title="Open Categories Menu">
                             <i class="bi bi-list fs-4"></i>
                         </button>
-                        <a href="{{ route('home') }}" class="text-decoration-none d-flex align-items-center">
-                            <div class="brand-cube-logo me-2">
-                                <svg width="40" height="40" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <!-- Top isometric face (Yellow) -->
-                                    <polygon points="21,4 37,13 21,22 5,13" fill="#ffb703" />
-                                    <!-- Left isometric face (Deep Navy) -->
-                                    <polygon points="5,13 21,22 21,39 5,30" fill="#07152b" />
-                                    <!-- Right isometric face (Steel Navy Blue) -->
-                                    <polygon points="21,22 37,13 37,30 21,39" fill="#1e3a8a" />
-                                    <!-- Building Grid Accent Lines -->
-                                    <line x1="13" y1="17.5" x2="13" y2="34.5" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.35" />
-                                    <line x1="29" y1="17.5" x2="29" y2="34.5" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.35" />
-                                    <line x1="5" y1="21.5" x2="21" y2="30.5" stroke="#ffffff" stroke-width="1" stroke-opacity="0.25" />
-                                    <line x1="21" y1="30.5" x2="37" y2="21.5" stroke="#ffffff" stroke-width="1" stroke-opacity="0.25" />
-                                </svg>
-                            </div>
-                            <div class="d-flex flex-column justify-content-center">
-                                <span class="brand-name" style="font-size: 22px;">Garudo</span>
-                                <span class="brand-tagline">Build Better, Together</span>
-                            </div>
+                        <a href="{{ route('home') }}" class="text-decoration-none d-inline-flex align-items-center" title="Garudo B2B Marketplace">
+                            <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" class="brand-logo-img">
                         </a>
                     </div>
                 </div>
@@ -1045,21 +1525,9 @@
     <div class="offcanvas offcanvas-start mobile-cat-offcanvas" tabindex="-1" id="mobileCategoriesOffcanvas" aria-labelledby="mobileCategoriesOffcanvasLabel">
         <!-- Offcanvas Header -->
         <div class="offcanvas-header mobile-cat-header">
-            <div class="d-flex align-items-center">
-                <div class="brand-cube-logo me-2.5">
-                    <svg width="36" height="36" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <polygon points="21,4 37,13 21,22 5,13" fill="#ffb703" />
-                        <polygon points="5,13 21,22 21,39 5,30" fill="#07152b" />
-                        <polygon points="21,22 37,13 37,30 21,39" fill="#1e3a8a" />
-                        <line x1="13" y1="17.5" x2="13" y2="34.5" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.35" />
-                        <line x1="29" y1="17.5" x2="29" y2="34.5" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.35" />
-                    </svg>
-                </div>
-                <div class="d-flex flex-column">
-                    <span class="text-white fw-bold" style="font-size: 19px; letter-spacing: -0.4px;">Garudo</span>
-                    <span class="text-white-50" style="font-size: 9.5px; font-weight: 500;">Build Better, Together</span>
-                </div>
-            </div>
+            <a href="{{ route('home') }}" class="d-inline-flex align-items-center text-decoration-none">
+                <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 38px; max-height: 40px; width: auto; object-fit: contain;">
+            </a>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
 
@@ -1443,101 +1911,173 @@
         @yield('content')
     </main>
 
-    <!-- Comprehensive Footer Matching Design Image -->
-    <footer class="garudo-footer pt-5 pb-3 mt-5">
-        <div class="container-fluid px-4">
-            <div class="row g-4 pb-4 border-bottom border-secondary border-opacity-25">
-                <!-- Column 1: Brand Info -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="bg-navy text-white fw-black fs-4 px-2 py-1 rounded d-inline-block mb-3" style="font-weight: 900;">
-                        GARUDO<span class="text-yellow">.IN</span>
-                    </div>
-                    <p class="small text-secondary mb-3" style="line-height: 1.6;">
-                        India's Premier B2B Marketplace for Building Materials, Construction Supplies, Industrial Equipment, and Civil Infrastructure Procurement.
+    <!-- Comprehensive Footer Matching Design Image 1 -->
+    <footer class="garudo-footer pt-5 pb-0 mt-5">
+        <div class="container-fluid px-4 px-lg-5">
+            <div class="row g-4 justify-content-between">
+                <!-- Column 1: Brand, Tagline, Price Alerts, Payments, Socials -->
+                <div class="col-lg-3 col-xl-3">
+                    <a href="{{ route('home') }}" class="footer-logo d-inline-block mb-3 text-decoration-none">
+                        <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 44px; width: auto; object-fit: contain;">
+                    </a>
+                    <p class="footer-tagline">
+                        India's #1 Building Materials Marketplace. TMT Bars, Cement, AAC Blocks, ACP Panels and 10,000+ products from 5000+ verified vendors.
                     </p>
-                    <div class="bg-navy-light p-3 rounded mb-3">
-                        <div class="fw-bold text-white small mb-1">TOP PROMOTIONAL OFFER</div>
-                        <div class="text-yellow small">Get 5% Instant Cash Back on Bulk GST Invoicing orders over ₹50,000!</div>
+
+                    <!-- Get Price Alerts & Deals Box -->
+                    <div class="footer-alerts-box">
+                        <div class="footer-alerts-title">Get Price Alerts &amp; Deals</div>
+                        <div class="footer-alerts-sub">Subscribe for market price updates, exclusive deals &amp; new arrivals.</div>
+                        <form action="#" method="POST" onsubmit="event.preventDefault(); alert('Thank you for subscribing to Garudo Price Alerts!');" class="d-flex gap-2">
+                            <input type="email" class="form-control form-control-sm footer-alerts-input" placeholder="Enter your email" required>
+                            <button type="submit" class="btn footer-alerts-btn">Subscribe</button>
+                        </form>
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-twitter-x"></i></a>
-                        <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-linkedin"></i></a>
-                        <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-youtube"></i></a>
-                        <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-instagram"></i></a>
+
+                    <!-- Payment Badges -->
+                    <div class="mb-2">
+                        <span class="footer-pay-label">We accept:</span>
+                        <span class="footer-pay-chip">UPI</span>
+                        <span class="footer-pay-chip">Razorpay</span>
+                        <span class="footer-pay-chip">Net Banking</span>
+                        <span class="footer-pay-chip">Credit Card</span>
+                        <div class="mt-1" style="margin-left: 65px;">
+                            <span class="footer-pay-chip">EMI</span>
+                            <span class="footer-pay-chip">COD</span>
+                        </div>
+                    </div>
+
+                    <!-- Social Icons -->
+                    <div class="d-flex align-items-center flex-wrap">
+                        <a href="https://facebook.com" target="_blank" rel="noopener" class="footer-social-btn" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener" class="footer-social-btn" title="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="https://twitter.com" target="_blank" rel="noopener" class="footer-social-btn" title="X (Twitter)"><i class="bi bi-twitter-x"></i></a>
+                        <a href="https://youtube.com" target="_blank" rel="noopener" class="footer-social-btn" title="YouTube"><i class="bi bi-youtube"></i></a>
+                        <a href="https://linkedin.com" target="_blank" rel="noopener" class="footer-social-btn" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://wa.me" target="_blank" rel="noopener" class="footer-social-btn" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
                     </div>
                 </div>
 
                 <!-- Column 2: Quick Links -->
-                <div class="col-lg-2 col-md-6 col-6">
-                    <h6>Quick Links</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ route('home') }}">About Garudo</a></li>
-                        <li><a href="#">Company Overview</a></li>
-                        <li><a href="#">Press & News</a></li>
-                        <li><a href="#">Career Opportunities</a></li>
-                        <li><a href="#">Bulk Order RFQ</a></li>
-                        <li><a href="#">Supplier Verification</a></li>
-                        <li><a href="#">Garudo Logistics</a></li>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <h6 class="footer-col-title">Quick Links</h6>
+                    <ul class="footer-links-list">
+                        <li><a href="{{ route('home') }}"><span class="footer-arrow">&gt;</span> Home</a></li>
+                        <li><a href="{{ route('products.index') }}"><span class="footer-arrow">&gt;</span> Shop All Products</a></li>
+                        <li><a href="{{ url('/vendors') }}"><span class="footer-arrow">&gt;</span> All Vendors</a></li>
+                        <li><a href="{{ route('products.index', ['filter' => 'deals']) }}"><span class="footer-arrow">&gt;</span> Today's Deals</a></li>
+                        <li><a href="{{ route('products.index', ['filter' => 'new']) }}"><span class="footer-arrow">&gt;</span> New Arrivals</a></li>
+                        <li><a href="{{ url('/boq-estimator') }}"><span class="footer-arrow">&gt;</span> BOQ Estimator</a></li>
+                        <li><a href="{{ route('vendor.register') }}"><span class="footer-arrow">&gt;</span> Sell on Garudo</a></li>
+                        <li><a href="{{ route('products.index', ['filter' => 'bulk']) }}"><span class="footer-arrow">&gt;</span> Bulk Orders</a></li>
                     </ul>
                 </div>
 
                 <!-- Column 3: Top Categories -->
-                <div class="col-lg-2 col-md-6 col-6">
-                    <h6>Top Categories</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Cement & Concrete</a></li>
-                        <li><a href="#">TMT Steel Rebars</a></li>
-                        <li><a href="#">Red Bricks & AAC Blocks</a></li>
-                        <li><a href="#">PVC & CPVC Pipes</a></li>
-                        <li><a href="#">Electrical Cables & Switches</a></li>
-                        <li><a href="#">Paints, Emulsions & Primers</a></li>
-                        <li><a href="#">Tiles, Marble & Granite</a></li>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <h6 class="footer-col-title">Top Categories</h6>
+                    <ul class="footer-links-list">
+                        <li><a href="{{ route('products.index', ['category' => 'acp-sheets']) }}"><span class="footer-arrow">&gt;</span> ACP Sheets</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'wooden-series']) }}"><span class="footer-arrow">&gt;</span> Wooden Series</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'breeze-blocks']) }}"><span class="footer-arrow">&gt;</span> BREEZE BLOCKS</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'terracotta-clay-jali']) }}"><span class="footer-arrow">&gt;</span> Terracotta Clay Jali</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'metallic-series']) }}"><span class="footer-arrow">&gt;</span> Metallic Series</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'roofing-materials']) }}"><span class="footer-arrow">&gt;</span> Roofing Materials</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'glossy-series']) }}"><span class="footer-arrow">&gt;</span> Glossy Series</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'natural-stone-series']) }}"><span class="footer-arrow">&gt;</span> Natural Stone Series</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'paver-blocks']) }}"><span class="footer-arrow">&gt;</span> PAVER BLOCKS</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'sand-series']) }}"><span class="footer-arrow">&gt;</span> Sand Series</a></li>
                     </ul>
                 </div>
 
-                <!-- Column 4: Buyer & Seller Services -->
-                <div class="col-lg-2 col-md-6 col-6">
-                    <h6>Customer Service</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Help Center & FAQ</a></li>
-                        <li><a href="#">Track Order Status</a></li>
-                        <li><a href="#">Escrow Payment Guarantee</a></li>
-                        <li><a href="#">Returns & Refund Policy</a></li>
-                        <li><a href="{{ route('vendor.register') }}">Sell on Garudo</a></li>
-                        <li><a href="#">Vendor Portal Login</a></li>
-                        <li><a href="#">GST Invoice Support</a></li>
+                <!-- Column 4: Customer Service -->
+                <div class="col-lg-2 col-md-4 col-6">
+                    <h6 class="footer-col-title">Customer Service</h6>
+                    <ul class="footer-links-list">
+                        <li><a href="{{ url('/account') }}"><span class="footer-arrow">&gt;</span> My Account</a></li>
+                        <li><a href="{{ url('/track-order') }}"><span class="footer-arrow">&gt;</span> Track Order</a></li>
+                        <li><a href="{{ url('/return-policy') }}"><span class="footer-arrow">&gt;</span> Return Policy</a></li>
+                        <li><a href="{{ url('/shipping-delivery') }}"><span class="footer-arrow">&gt;</span> Shipping &amp; Delivery</a></li>
+                        <li><a href="{{ url('/faq') }}"><span class="footer-arrow">&gt;</span> FAQ</a></li>
+                        <li><a href="{{ url('/contact-us') }}"><span class="footer-arrow">&gt;</span> Contact Us</a></li>
+                        <li><a href="{{ url('/privacy-policy') }}"><span class="footer-arrow">&gt;</span> Privacy Policy</a></li>
+                        <li><a href="{{ url('/terms-conditions') }}"><span class="footer-arrow">&gt;</span> Terms &amp; Conditions</a></li>
+                        <li><a href="{{ url('/refund-policy') }}"><span class="footer-arrow">&gt;</span> Refund Policy</a></li>
+                        <li><a href="{{ url('/about-us') }}"><span class="footer-arrow">&gt;</span> About Us</a></li>
                     </ul>
                 </div>
 
-                <!-- Column 5: Contact & Mobile Apps -->
-                <div class="col-lg-3 col-md-6 col-6">
-                    <h6>Contact Us</h6>
-                    <p class="small mb-1"><i class="bi bi-geo-alt-fill text-yellow me-2"></i> Garudo Tower, Plot 42, Industrial Zone, Sector 62, Noida, NCR, India</p>
-                    <p class="small mb-1"><i class="bi bi-telephone-fill text-yellow me-2"></i> +91 1800-123-4567 (Toll Free)</p>
-                    <p class="small mb-3"><i class="bi bi-envelope-fill text-yellow me-2"></i> support@garudo.in</p>
+                <!-- Column 5: Contact Us & Download App -->
+                <div class="col-lg-3 col-md-6 col-12">
+                    <h6 class="footer-col-title">Contact Us</h6>
+                    
+                    <div class="footer-contact-row">
+                        <i class="bi bi-geo-alt-fill footer-contact-icon"></i>
+                        <div>
+                            <div class="footer-contact-title">Address</div>
+                            <div class="footer-contact-text">Garudo.In Marketplace, India</div>
+                        </div>
+                    </div>
 
-                    <h6>Download Mobile App</h6>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-light text-start py-1 px-2" style="font-size: 10px;">
-                            <i class="bi bi-google-play fs-6 me-1"></i> Google Play
-                        </button>
-                        <button class="btn btn-sm btn-outline-light text-start py-1 px-2" style="font-size: 10px;">
-                            <i class="bi bi-apple fs-6 me-1"></i> App Store
-                        </button>
+                    <div class="footer-contact-row">
+                        <i class="bi bi-telephone-fill footer-contact-icon"></i>
+                        <div>
+                            <div class="footer-contact-title">Phone</div>
+                            <div class="footer-contact-text">+91 80000 00000</div>
+                        </div>
+                    </div>
+
+                    <div class="footer-contact-row">
+                        <i class="bi bi-envelope-fill footer-contact-icon"></i>
+                        <div>
+                            <div class="footer-contact-title">Email</div>
+                            <div class="footer-contact-text">support@garudo.in</div>
+                        </div>
+                    </div>
+
+                    <div class="footer-contact-row">
+                        <i class="bi bi-clock-fill footer-contact-icon"></i>
+                        <div>
+                            <div class="footer-contact-title">Working Hours</div>
+                            <div class="footer-contact-text">Mon-Sat: 9AM – 7PM</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-2">
+                        <div class="text-white-50 small fw-semibold mb-2" style="font-size: 11px;">Download App</div>
+                        <div class="d-flex flex-column gap-2">
+                            <a href="#" class="footer-app-btn">
+                                <svg class="footer-app-icon" viewBox="0 0 24 24" width="22" height="22" fill="none">
+                                    <path d="M3.609 1.814L13.792 12 3.61 22.186A2.25 2.25 0 0 1 3 20.625V3.375c0-.6.223-1.15.609-1.561z" fill="#00D3FF"/>
+                                    <path d="M17.207 8.586l-3.415 3.414 3.415 3.414 3.864-2.196a1.44 1.44 0 0 0 0-2.436l-3.864-2.196z" fill="#FFCE00"/>
+                                    <path d="M13.792 12L3.609 1.814A2.316 2.316 0 0 1 4.5 1.5c.57 0 1.12.19 1.58.55l11.127 6.536L13.792 12z" fill="#00F076"/>
+                                    <path d="M17.207 15.414L6.08 21.95c-.46.36-1.01.55-1.58.55a2.316 2.316 0 0 1-.891-.314L13.792 12l3.415 3.414z" fill="#FF3A44"/>
+                                </svg>
+                                <div class="footer-app-text">
+                                    <span class="footer-app-sub">GET IT ON</span>
+                                    <span class="footer-app-title">Google Play</span>
+                                </div>
+                            </a>
+
+                            <a href="#" class="footer-app-btn">
+                                <i class="bi bi-apple footer-app-icon text-white" style="font-size: 22px;"></i>
+                                <div class="footer-app-text">
+                                    <span class="footer-app-sub">DOWNLOAD ON</span>
+                                    <span class="footer-app-title">App Store</span>
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Bottom Copyright Bar -->
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center pt-3 small text-secondary">
-                <div>© {{ date('Y') }} GARUDO B2B MARKETPLACE PRIVATE LIMITED. All rights reserved.</div>
-                <div class="d-flex gap-3">
-                    <a href="#" class="text-secondary">Privacy Policy</a>
-                    <a href="#" class="text-secondary">Terms of Service</a>
-                    <a href="#" class="text-secondary">Security</a>
-                    <a href="#" class="text-secondary">Sitemap</a>
-                </div>
+        <!-- Bottom Copyright Bar -->
+        <div class="footer-bottom-bar">
+            <div class="container-fluid px-4 text-center">
+                <p class="footer-bottom-text mb-0">
+                    &copy; 2026 Garudo.in – Smart Online Marketplace for Products, Services &amp; Business. All Rights Reserved. Built with <span class="text-danger">&#10084;</span> for India's construction industry. <span class="mx-1 text-muted">|</span> <a href="{{ url('/privacy-policy') }}">Privacy Policy</a> <span class="mx-1 text-muted">&middot;</span> <a href="{{ url('/terms-conditions') }}">Terms</a> <span class="mx-1 text-muted">&middot;</span> <a href="{{ url('/sitemap') }}">Sitemap</a> <span class="mx-1 text-muted">&middot;</span> 🇮🇳 Proudly Made in India
+                </p>
             </div>
         </div>
     </footer>
@@ -1548,6 +2088,10 @@
     
     <script>
         function ajaxAddToCart(productId, qty) {
+            if (window.GARUDO_LAUNCH_MODE_ACTIVE) {
+                showPreLaunchModal();
+                return;
+            }
             qty = qty || 1;
             fetch("{{ route('cart.add') }}", {
                 method: "POST",
@@ -1560,6 +2104,10 @@
             })
             .then(r => r.json())
             .then(d => {
+                if (d.is_launch_mode) {
+                    showPreLaunchModal(d.message);
+                    return;
+                }
                 if (d.success) {
                     window.location.href = "{{ route('cart.index') }}";
                 }
@@ -1570,25 +2118,551 @@
         }
 
         function ajaxToggleWishlist(productId) {
+            if (typeof toggleWishlistCard === 'function') {
+                toggleWishlistCard(null, productId);
+            } else {
+                fetch(`/wishlist/toggle/${productId}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Accept": "application/json"
+                    }
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        window.location.href = "{{ route('wishlist.index') }}";
+                    }
+                })
+                .catch(() => {
+                    window.location.href = "{{ route('wishlist.index') }}";
+                });
+            }
+        }
+
+        /* ── Seamless Wishlist Toggle with Toast Notification ── */
+        window.toggleWishlistCard = function(btn, productId) {
+            if (!productId) return;
+
+            const icon = btn ? btn.querySelector('i') : null;
+            if (btn) btn.disabled = true;
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || "{{ csrf_token() }}";
+
             fetch(`/wishlist/toggle/${productId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "X-CSRF-TOKEN": csrfToken,
                     "Accept": "application/json"
                 }
             })
             .then(r => r.json())
             .then(d => {
-                if (d.success) {
-                    window.location.href = "{{ route('wishlist.index') }}";
+                if (btn) btn.disabled = false;
+                if (d && d.success) {
+                    const isAdded = d.action === 'added';
+
+                    // Update all matching wishlist buttons on page
+                    document.querySelectorAll(`.btn-wishlist-toggle[data-id="${productId}"]`).forEach(b => {
+                        const ic = b.querySelector('i');
+                        if (isAdded) {
+                            b.classList.add('active');
+                            if (b.classList.contains('btn-outline-danger')) {
+                                b.classList.remove('btn-outline-danger');
+                                b.classList.add('btn-danger', 'text-white');
+                            }
+                            b.setAttribute('title', 'Remove from Wishlist');
+                            if (ic) {
+                                ic.className = 'bi bi-heart-fill';
+                                ic.style.color = '#ef4444';
+                                ic.style.animation = 'heartPop 0.35s ease';
+                            }
+                        } else {
+                            b.classList.remove('active');
+                            if (b.classList.contains('btn-danger')) {
+                                b.classList.remove('btn-danger', 'text-white');
+                                b.classList.add('btn-outline-danger');
+                            }
+                            b.setAttribute('title', 'Add to Wishlist');
+                            if (ic) {
+                                ic.className = 'bi bi-heart';
+                                ic.style.color = '#64748b';
+                                ic.style.animation = '';
+                            }
+                        }
+                    });
+
+                    // Update header wishlist counters
+                    if (typeof d.count !== 'undefined') {
+                        document.querySelectorAll('.buildmart-badge-red, .wishlist-counter-badge').forEach(badge => {
+                            badge.textContent = d.count;
+                        });
+                    }
+
+                    // Show Toast Notification
+                    showWishlistToast(
+                        isAdded ? 'Added to Wishlist! ❤️' : 'Removed from Wishlist',
+                        isAdded ? (d.message || 'Item saved to your procurement wishlist.') : (d.message || 'Item removed from your saved items.'),
+                        isAdded
+                    );
+                } else {
+                    showWishlistToast(
+                        'Notice',
+                        (d && d.message) ? d.message : 'Could not update wishlist. Please try again.',
+                        false
+                    );
                 }
             })
-            .catch(() => {
-                window.location.href = "{{ route('wishlist.index') }}";
+            .catch(err => {
+                if (btn) btn.disabled = false;
+                console.error("Wishlist toggle error:", err);
+                showWishlistToast('Notice', 'Could not update wishlist. Please try again.', false);
             });
-        }
+        };
+
+        // Wishlist Floating Toast Engine
+        let wishlistToastTimer = null;
+        window.showWishlistToast = function(title, desc, isAdded) {
+            let toastEl = document.getElementById('garudoWishlistToast');
+            if (!toastEl) return;
+
+            const titleEl = document.getElementById('garudoToastTitle');
+            const descEl = document.getElementById('garudoToastDesc');
+            const iconEl = toastEl.querySelector('.garudo-toast-icon');
+
+            if (titleEl) titleEl.textContent = title;
+            if (descEl) descEl.textContent = desc;
+            if (iconEl) {
+                iconEl.className = isAdded ? 'bi bi-heart-fill text-danger garudo-toast-icon' : 'bi bi-heartbreak text-secondary garudo-toast-icon';
+                iconEl.style.animation = 'none';
+                iconEl.offsetHeight; // trigger reflow
+                iconEl.style.animation = 'heartPop 0.35s ease';
+            }
+
+            toastEl.style.display = 'block';
+            setTimeout(() => toastEl.classList.add('show'), 10);
+
+            if (wishlistToastTimer) clearTimeout(wishlistToastTimer);
+            wishlistToastTimer = setTimeout(() => {
+                toastEl.classList.remove('show');
+                setTimeout(() => { toastEl.style.display = 'none'; }, 300);
+            }, 3200);
+        };
+
+        // Global Quick View Product Modal Handler
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentQvProductId = null;
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-quick-view-modal');
+                if (!btn) return;
+                e.preventDefault();
+
+                currentQvProductId = btn.getAttribute('data-id');
+                const name = btn.getAttribute('data-name') || '';
+                const price = btn.getAttribute('data-price') || '';
+                const unit = btn.getAttribute('data-unit') || 'Piece';
+                const mrp = btn.getAttribute('data-mrp') || '';
+                const image = btn.getAttribute('data-image') || '';
+                const vendor = btn.getAttribute('data-vendor') || '';
+                const rating = btn.getAttribute('data-rating') || '4.8';
+                const url = btn.getAttribute('data-url') || '#';
+
+                const modalImg = document.getElementById('qvModalImage');
+                if (modalImg) {
+                    modalImg.src = image;
+                    modalImg.alt = name;
+                }
+                const modalTitle = document.getElementById('qvModalTitle');
+                if (modalTitle) modalTitle.textContent = name;
+                const modalPrice = document.getElementById('qvModalPrice');
+                if (modalPrice) modalPrice.textContent = price;
+                const modalUnit = document.getElementById('qvModalUnit');
+                if (modalUnit) modalUnit.textContent = '/ ' + unit;
+                const modalMrp = document.getElementById('qvModalMrp');
+                if (modalMrp) modalMrp.textContent = mrp;
+                const modalVendor = document.getElementById('qvModalVendor');
+                if (modalVendor) modalVendor.textContent = vendor;
+                const modalRating = document.getElementById('qvModalRating');
+                if (modalRating) modalRating.textContent = rating;
+                const modalDetailsBtn = document.getElementById('qvModalViewDetailsBtn');
+                if (modalDetailsBtn) modalDetailsBtn.href = url;
+                const modalQty = document.getElementById('qvModalQty');
+                if (modalQty) modalQty.value = '1';
+
+                const modalEl = document.getElementById('quickViewProductModal');
+                if (modalEl && typeof bootstrap !== 'undefined') {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+            });
+
+            const addCartBtn = document.getElementById('qvModalAddToCartBtn');
+            if (addCartBtn) {
+                addCartBtn.addEventListener('click', function() {
+                    if (currentQvProductId && typeof ajaxAddToCart === 'function') {
+                        const qty = parseInt(document.getElementById('qvModalQty').value, 10) || 1;
+                        ajaxAddToCart(currentQvProductId, qty);
+                    }
+                });
+            }
+        });
     </script>
+
+    <!-- Global Wishlist Toast Component -->
+    <div id="garudoWishlistToast" class="garudo-wishlist-toast" style="display: none;">
+        <div class="garudo-toast-content">
+            <i class="bi bi-heart-fill text-danger garudo-toast-icon"></i>
+            <div class="garudo-toast-text">
+                <div class="garudo-toast-title" id="garudoToastTitle">Saved to Wishlist!</div>
+                <div class="garudo-toast-desc" id="garudoToastDesc">Item added to your procurement wishlist.</div>
+            </div>
+            <a href="{{ route('wishlist.index') }}" class="garudo-toast-action">View</a>
+        </div>
+    </div>
+
+    <!-- Global Quick View Product Modal -->
+    <div class="modal fade" id="quickViewProductModal" tabindex="-1" aria-labelledby="quickViewProductModalLabel" aria-hidden="true" style="z-index: 10555;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+                <div class="modal-header border-0 pb-0 pe-3 pt-3">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 pt-1">
+                    <div class="row g-4 align-items-center">
+                        <div class="col-md-5 text-center">
+                            <div class="bg-light p-3 rounded-3 d-flex align-items-center justify-content-center" style="height: 250px; border: 1px solid #f1f5f9;">
+                                <img id="qvModalImage" src="" alt="Product" class="img-fluid" style="max-height: 220px; max-width: 95%; object-fit: contain;">
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="d-flex align-items-center gap-2 mb-1.5">
+                                <span class="badge bg-success-subtle text-success border border-success px-2 py-0.5" style="font-size: 10.5px;">
+                                    <i class="bi bi-patch-check-fill me-1"></i> Verified Industrial Seller
+                                </span>
+                                <span class="text-muted small" id="qvModalVendor" style="font-size: 11px;"></span>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2" id="qvModalTitle" style="font-size: 1.15rem; line-height: 1.3;"></h5>
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="d-flex text-warning" style="font-size: 11px;">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-half"></i>
+                                </div>
+                                <span class="fw-bold text-dark small" id="qvModalRating">4.8</span>
+                                <span class="text-muted small" style="font-size: 11px;">(Garudo Buyer Feedback)</span>
+                            </div>
+                            <div class="d-flex align-items-baseline gap-2 mb-3 pb-3 border-bottom" style="border-color: #f1f5f9 !important;">
+                                <span class="fw-black text-dark fs-3" id="qvModalPrice" style="font-weight: 800;">₹0</span>
+                                <span class="text-muted" id="qvModalUnit" style="font-size: 13px;">/ Piece</span>
+                                <span class="text-muted text-decoration-line-through small ms-2" id="qvModalMrp"></span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-4">
+                                <label class="form-label mb-0 fw-semibold text-muted small">Quantity:</label>
+                                <input type="number" id="qvModalQty" class="form-control form-control-sm text-center fw-bold" value="1" min="1" max="9999" style="width: 75px;">
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" id="qvModalAddToCartBtn" class="btn btn-dark fw-bold px-3 py-2 rounded-3 flex-fill" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border: none; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);">
+                                    <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                                </button>
+                                <a id="qvModalViewDetailsBtn" href="#" class="btn btn-outline-dark fw-bold px-3 py-2 rounded-3 flex-fill text-center">
+                                    View Details <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Card Hover & Wishlist Styles -->
+    <style>
+        .garudo-product-card {
+            border-radius: 16px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.06), 0 1px 4px -1px rgba(15, 23, 42, 0.03) !important;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                        box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                        border-color 0.25s ease !important;
+            background: #ffffff !important;
+        }
+        .garudo-product-card:hover {
+            transform: translateY(-6px) !important;
+            box-shadow: 0 16px 32px -4px rgba(15, 23, 42, 0.12), 0 6px 14px -2px rgba(15, 23, 42, 0.05) !important;
+            border-color: #cbd5e1 !important;
+        }
+        .garudo-product-card:hover .garudo-card-img,
+        .garudo-product-card:hover .trending-card-img {
+            transform: scale(1.08) !important;
+        }
+        .garudo-product-card:hover .garudo-card-title,
+        .garudo-product-card:hover .trending-card-title {
+            color: #2563eb !important;
+        }
+
+        .btn-wishlist-toggle {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .btn-wishlist-toggle:hover {
+            transform: scale(1.15) !important;
+            background: #fff1f2 !important;
+            border-color: #fecdd3 !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
+        }
+        .btn-wishlist-toggle:hover i {
+            color: #ef4444 !important;
+        }
+        .btn-wishlist-toggle.active {
+            background: #fff1f2 !important;
+            border-color: #fca5a5 !important;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2) !important;
+        }
+        .btn-wishlist-toggle.active i {
+            color: #ef4444 !important;
+            animation: heartPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes heartPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.45) rotate(-6deg); }
+            70% { transform: scale(0.9) rotate(3deg); }
+            100% { transform: scale(1); }
+        }
+
+        .garudo-btn-quickview {
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .garudo-btn-quickview:hover {
+            background: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #0f172a !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16) !important;
+        }
+        .garudo-btn-quickview:active {
+            transform: scale(0.96) !important;
+        }
+
+        .garudo-btn-addcart {
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .garudo-btn-addcart:hover {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4) !important;
+        }
+        .garudo-btn-addcart:active {
+            transform: scale(0.96) !important;
+        }
+
+        .custom-products-scroll {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 12px 14px 22px 14px !important;
+            gap: 16px !important;
+        }
+        .custom-products-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .carousel-arrow-nav {
+            width: 42px !important;
+            height: 42px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1.5px solid #e2e8f0 !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12) !important;
+            z-index: 25 !important;
+            cursor: pointer !important;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .carousel-arrow-prev {
+            left: -14px !important;
+        }
+        .carousel-arrow-next {
+            right: -14px !important;
+        }
+        .carousel-arrow-nav:hover {
+            background: #0f172a !important;
+            border-color: #0f172a !important;
+            transform: translateY(-50%) scale(1.12) !important;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25) !important;
+        }
+        .carousel-arrow-nav:hover i {
+            color: #ffffff !important;
+        }
+        .carousel-arrow-nav:active {
+            transform: translateY(-50%) scale(0.96) !important;
+        }
+
+        .garudo-wishlist-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 99999;
+            pointer-events: auto;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        .garudo-wishlist-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .garudo-toast-content {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 12px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            min-width: 290px;
+        }
+        .garudo-toast-icon {
+            font-size: 20px;
+        }
+        .garudo-toast-text {
+            flex-grow: 1;
+            line-height: 1.25;
+        }
+        .garudo-toast-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .garudo-toast-desc {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .garudo-toast-action {
+            background: #ff5400;
+            color: #ffffff;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.15s ease;
+        }
+        .garudo-toast-action:hover {
+            background: #e04800;
+            color: #ffffff;
+        }
+    </style>
+
+    <!-- Official Pre-Launch Notice Modal -->
+    <div class="modal fade" id="garudoPreLaunchModal" tabindex="-1" aria-labelledby="garudoPreLaunchModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 490px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 pb-0 position-relative text-white" style="background: linear-gradient(135deg, #070d18 0%, #17153a 60%, #2a1152 100%);">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="w-100 text-center pt-4 pb-2">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 74px; height: 74px; background: rgba(245, 158, 11, 0.15); border: 2px solid rgba(245, 158, 11, 0.45); box-shadow: 0 0 25px rgba(245, 158, 11, 0.35);">
+                            <i class="bi bi-rocket-takeoff-fill text-warning fs-1 animate-rocket"></i>
+                        </div>
+                        <div>
+                            <span class="badge bg-warning text-dark fw-bold px-3 py-1.5 rounded-pill mb-2 text-uppercase" style="letter-spacing: 0.8px; font-size: 11px;">
+                                Pre-Launch Preview Mode
+                            </span>
+                        </div>
+                        <h4 class="modal-title fw-bold text-white px-2 mb-1" id="garudoPreLaunchModalLabel">
+                            Official Launching on <span class="text-warning">{{ $launchSettings['launch_date'] ?? '20th October' }}</span>!
+                        </h4>
+                        <div class="text-white-50 small mb-2">Garudo B2B Marketplace</div>
+                    </div>
+                </div>
+                <div class="modal-body p-4 text-center bg-white">
+                    <p class="text-dark fs-6 mb-3 fw-medium" id="preLaunchNoticeBody">
+                        {{ $launchSettings['launch_notice_message'] ?? 'Direct order purchasing & checkout will officially go live on our launch day.' }}
+                    </p>
+                    
+                    <div class="p-3 rounded-3 mb-4 text-start" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                        <div class="d-flex align-items-center gap-2 mb-2 text-dark fw-bold" style="font-size: 13px;">
+                            <i class="bi bi-stars text-warning"></i> What you can do during Pre-Launch:
+                        </div>
+                        <ul class="list-unstyled mb-0 small text-muted ps-3" style="line-height: 1.8;">
+                            <li><i class="bi bi-check2-circle text-success me-1.5"></i> Browse 10,000+ verified B2B catalog products</li>
+                            <li><i class="bi bi-check2-circle text-success me-1.5"></i> Save materials to your <strong>Wishlist</strong> for 1-click checkout on launch</li>
+                            <li><i class="bi bi-check2-circle text-success me-1.5"></i> Connect with verified manufacturers & distributors</li>
+                            <li><i class="bi bi-check2-circle text-success me-1.5"></i> Request custom wholesale quotes & sample test pieces</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-warning fw-bold py-2.5 rounded-3 text-dark shadow-sm" data-bs-dismiss="modal">
+                            <i class="bi bi-compass me-1"></i> Continue Exploring Catalog
+                        </button>
+                        <a href="{{ route('customer.wishlist') }}" class="btn btn-outline-dark fw-semibold py-2 rounded-3">
+                            <i class="bi bi-heart-fill me-1 text-danger"></i> View My Wishlist
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.GARUDO_LAUNCH_MODE_ACTIVE = {{ (($launchSettings['launch_mode_active'] ?? '1') == '1') ? 'true' : 'false' }};
+        window.GARUDO_LAUNCH_DATE = "{{ $launchSettings['launch_date'] ?? '20th October' }}";
+
+        function showPreLaunchModal(customMsg) {
+            const modalEl = document.getElementById('garudoPreLaunchModal');
+            if (modalEl) {
+                if (customMsg) {
+                    const bodyEl = document.getElementById('preLaunchNoticeBody');
+                    if (bodyEl) bodyEl.textContent = customMsg;
+                }
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                bsModal.show();
+            } else {
+                alert("Official Launching on " + window.GARUDO_LAUNCH_DATE + "! Product purchasing will start on launch day.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.GARUDO_LAUNCH_MODE_ACTIVE) {
+                // Intercept any form posting to /cart/add
+                document.addEventListener('submit', function(e) {
+                    const form = e.target;
+                    if (form && form.action && form.action.includes('/cart/add')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showPreLaunchModal();
+                        return false;
+                    }
+                }, true);
+
+                // Intercept buy now / add to cart / checkout clicks
+                document.addEventListener('click', function(e) {
+                    const btn = e.target.closest('button, a');
+                    if (!btn) return;
+                    if (btn.closest('#garudoPreLaunchModal')) return;
+
+                    const text = (btn.textContent || '').trim().toLowerCase();
+                    const isCartOrBuy = btn.matches('.btn-add-to-cart, [data-action="add-to-cart"], .btn-buy-now, [data-action="buy-now"]')
+                        || text.includes('add to cart') 
+                        || text.includes('buy now')
+                        || text.includes('proceed to secure checkout');
+
+                    if (isCartOrBuy) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showPreLaunchModal();
+                        return false;
+                    }
+                }, true);
+            }
+        });
+    </script>
+
     @stack('scripts')
 </body>
 </html>

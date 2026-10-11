@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Command Center - GARUDO B2B</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -302,13 +303,14 @@
     <div class="login-card-wrapper">
         <div class="login-glass-card">
             
-            <div class="brand-header">
-                <div class="brand-icon-box">
-                    <i class="bi bi-shield-lock-fill"></i>
-                </div>
-                <h1 class="brand-title">GARUDO <span>ADMIN</span></h1>
-                <div class="super-admin-badge">
-                    <i class="bi bi-shield-check"></i> Super Administrator Command Center
+            <div class="brand-header text-center mb-4">
+                <a href="{{ route('home') }}" class="d-inline-block mb-3 text-decoration-none">
+                    <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 58px; max-width: 100%; object-fit: contain;">
+                </a>
+                <div>
+                    <div class="super-admin-badge">
+                        <i class="bi bi-shield-check"></i> Super Administrator Command Center
+                    </div>
                 </div>
             </div>
 
@@ -325,7 +327,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.login.submit') }}" method="POST">
+            <form action="{{ request()->getHost() === 'admin.garudo.in' ? url('/login') : route('admin.login.submit') }}" method="POST">
                 @csrf
 
                 <div class="mb-3">
@@ -339,10 +341,11 @@
                             name="email" 
                             id="admin-email" 
                             class="form-control-custom" 
-                            placeholder="admin@garudo.com" 
-                            value="{{ old('email', 'admin@garudo.com') }}" 
+                            placeholder="Enter administrator email" 
+                            value="{{ old('email') }}" 
                             required 
                             autofocus
+                            autocomplete="off"
                         >
                     </div>
                 </div>

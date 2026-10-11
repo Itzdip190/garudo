@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendor Login - GARUDO B2B</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -126,19 +127,8 @@
     <div class="auth-card">
         <!-- Logo & Header -->
         <div class="text-center mb-4">
-            <a href="{{ route('home') }}" class="brand-logo-wrap mb-2">
-                <div class="brand-logo-icon">
-                    <svg viewBox="0 0 48 48" fill="none" style="width: 42px; height: 42px;" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 14C14 14 20 18 22 24C16 23 10 20 6 14Z" fill="#0B4D3C"/>
-                        <path d="M8 20C16 20 22 24 24 30C18 29 12 26 8 20Z" fill="#0B4D3C"/>
-                        <path d="M12 26C18 26 24 29 26 35C20 34 15 31 12 26Z" fill="#0B4D3C"/>
-                        <path d="M22 24C26 16 34 12 42 12C36 18 30 22 24 30C23 27 22 25 22 24Z" fill="#0B4D3C"/>
-                    </svg>
-                </div>
-                <div class="text-start">
-                    <div class="brand-name">GARUDO</div>
-                    <div class="brand-tagline">BUILD BETTER. TOGETHER.</div>
-                </div>
+            <a href="{{ route('home') }}" class="brand-logo-wrap text-decoration-none justify-content-center mb-3" title="Garudo B2B Marketplace">
+                <img src="{{ asset('images/garudo-eagle-logo.png') . '?v=eagle_final' }}" alt="GARUDO.in" style="height: 52px; max-width: 230px; object-fit: contain;">
             </a>
             <!-- Portal Switcher Tabs -->
             <div class="d-flex justify-content-center mt-2 mb-2">
@@ -162,7 +152,7 @@
             </div>
         @endif
 
-        <form action="{{ route('vendor.login.submit') }}" method="POST">
+        <form action="{{ (request()->getHost() === 'seller.garudo.in' || request()->getHost() === 'vendor.garudo.in') ? url('/login') : route('vendor.login.submit') }}" method="POST">
             @csrf
             <div class="mb-3">
                 <label class="form-label">Email Address</label>
@@ -192,7 +182,7 @@
 
             <div class="text-center pt-2 border-top">
                 <p class="text-muted small mb-2">Want to sell building materials on Garudo?</p>
-                <a href="{{ route('vendor.register') }}" class="fw-bold text-success text-decoration-none small">
+                <a href="{{ (request()->getHost() === 'seller.garudo.in' || request()->getHost() === 'vendor.garudo.in') ? url('/register') : route('vendor.register') }}" class="fw-bold text-success text-decoration-none small">
                     Register as a Vendor / Seller →
                 </a>
             </div>

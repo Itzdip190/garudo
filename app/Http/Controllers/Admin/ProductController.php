@@ -41,8 +41,22 @@ class ProductController extends Controller
                       $vq->where('company_name', 'like', "%{$search}%");
                   });
             });
+        }
+
         if ($request->filled('featured')) {
             $query->where('is_featured', (bool) $request->featured);
+        }
+
+        if ($request->filled('best_seller')) {
+            $query->where('is_best_seller', (bool) $request->best_seller);
+        }
+
+        if ($request->filled('trending')) {
+            $query->where('is_trending', (bool) $request->trending);
+        }
+
+        if ($request->filled('new_arrival')) {
+            $query->where('is_new_arrival', (bool) $request->new_arrival);
         }
 
         if ($request->filled('sponsored')) {
@@ -63,6 +77,9 @@ class ProductController extends Controller
             'deals_count' => Product::where('is_deal_of_the_day', true)->count(),
             'sponsored_count' => Product::where('is_sponsored', true)->count(),
             'featured_count' => Product::where('is_featured', true)->count(),
+            'best_seller_count' => Product::where('is_best_seller', true)->count(),
+            'trending_count' => Product::where('is_trending', true)->count(),
+            'new_arrival_count' => Product::where('is_new_arrival', true)->count(),
         ];
 
         $categories = Category::whereNull('parent_id')->get();
@@ -114,7 +131,34 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $product->update(['is_featured' => !$product->is_featured]);
 
-        $status = $product->is_featured ? 'marked as Featured' : 'removed from Featured';
+        $status = $product->is_featured ? 'marked as Top Rated / Featured' : 'removed from Top Rated';
+        return back()->with('success', "Product '{$product->name}' is now {$status}.");
+    }
+
+    public function toggleBestSeller($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->update(['is_best_seller' => !$product->is_best_seller]);
+
+        $status = $product->is_best_seller ? 'marked as Best Seller / Most Sold' : 'removed from Best Sellers';
+        return back()->with('success', "Product '{$product->name}' is now {$status}.");
+    }
+
+    public function toggleTrending($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->update(['is_trending' => !$product->is_trending]);
+
+        $status = $product->is_trending ? 'marked as Trending' : 'removed from Trending';
+        return back()->with('success', "Product '{$product->name}' is now {$status}.");
+    }
+
+    public function toggleNewArrival($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->update(['is_new_arrival' => !$product->is_new_arrival]);
+
+        $status = $product->is_new_arrival ? 'marked as New Arrival' : 'removed from New Arrivals';
         return back()->with('success', "Product '{$product->name}' is now {$status}.");
     }
 

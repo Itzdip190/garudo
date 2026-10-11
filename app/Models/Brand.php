@@ -11,7 +11,7 @@ class Brand extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'slug', 'owner_vendor_id', 'brand_type', 'logo', 'banner',
+        'name', 'slug', 'parent_id', 'brand_title_id', 'brand_tier', 'owner_vendor_id', 'brand_type', 'logo', 'banner',
         'description', 'story', 'warranty_policy', 'website', 'support_email', 'support_phone',
         'country_of_origin', 'year_established', 'trademark_number', 'trademark_class',
         'trademark_status', 'trademark_doc', 'verification_status', 'is_protected',
@@ -22,10 +22,12 @@ class Brand extends Model
     protected function casts(): array
     {
         return [
-            'is_featured'   => 'boolean',
-            'is_protected'  => 'boolean',
-            'sort_order'    => 'integer',
-            'verified_at'   => 'datetime',
+            'parent_id'        => 'integer',
+            'brand_title_id'   => 'integer',
+            'is_featured'      => 'boolean',
+            'is_protected'     => 'boolean',
+            'sort_order'       => 'integer',
+            'verified_at'      => 'datetime',
             'year_established' => 'integer',
         ];
     }
@@ -33,6 +35,26 @@ class Brand extends Model
     // ---------------------------------------------------------------
     // Relationships
     // ---------------------------------------------------------------
+
+    public function brandTitle()
+    {
+        return $this->belongsTo(BrandTitle::class, 'brand_title_id');
+    }
+
+    public function superBrand()
+    {
+        return $this->belongsTo(Brand::class, 'parent_id');
+    }
+
+    public function subBrands()
+    {
+        return $this->hasMany(Brand::class, 'parent_id')->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function activeSubBrands()
+    {
+        return $this->hasMany(Brand::class, 'parent_id')->where('status', 'active')->orderBy('name');
+    }
 
     public function products()
     {
@@ -79,6 +101,16 @@ class Brand extends Model
     // Business Logic & Helpers
     // ---------------------------------------------------------------
 
+    public function isSuperBrand(): bool
+    {
+        return is_null($this->parent_id) || $this->brand_tier === 'super_brand';
+    }
+
+    public function isSubBrand(): bool
+    {
+        return !is_null($this->parent_id);
+    }
+
     public function isAuthorized(): bool
     {
         return $this->verification_status === 'authorized' || $this->verification_status === 'active';
@@ -94,6 +126,7 @@ class Brand extends Model
 
     /**
      * Check if a specific vendor has permission to list/sell this brand's products
+     * (Supports inheritance: verified dealer of Super Brand can sell Sub Brand products)
      */
     public function canVendorSell(?Vendor $vendor): bool
     {
@@ -106,14 +139,23 @@ class Brand extends Model
             return true;
         }
 
-        // Brand Owner can always list
+        // Direct Brand Owner can always list
         if ($this->isOwnedBy($vendor)) {
             return true;
         }
 
-        // Must hold an active verified authorization
-        return $this->verifiedDealerAuthorizations()
+        // Parent Super Brand Owner can always list sub-brands
+        if ($this->parent_id && $this->superBrand && $this->superBrand->isOwnedBy($vendor)) {
+            return true;
+        }
+
+        // Must hold an active verified authorization for this brand OR its parent super brand
+        $eligibleBrandIds = array_filter([$this->id, $this->parent_id]);
+
+        return BrandDealerAuthorization::whereIn('brand_id', $eligibleBrandIds)
                     ->where('vendor_id', $vendor->id)
+                    ->where('garudo_approval_status', 'verified')
+                    ->where('status', 'active')
                     ->exists();
     }
 
@@ -130,6 +172,16 @@ class Brand extends Model
     // ---------------------------------------------------------------
     // Scopes
     // ---------------------------------------------------------------
+
+    public function scopeSuperBrands($query)
+    {
+        return $query->whereNull('parent_id')->orWhere('brand_tier', 'super_brand');
+    }
+
+    public function scopeSubBrands($query)
+    {
+        return $query->whereNotNull('parent_id');
+    }
 
     public function scopeActive($query)
     {

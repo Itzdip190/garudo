@@ -19,6 +19,7 @@ class BrandController extends Controller
         $search = $request->query('q');
 
         $query = Brand::where('status', 'active')
+            ->with(['ownerVendor', 'verifiedDealerAuthorizations.vendor'])
             ->withCount(['products' => function ($q) {
                 $q->where('approval_status', 'approved')->where('status', 'active');
             }])
@@ -34,6 +35,7 @@ class BrandController extends Controller
         // Featured / Top Brands
         $topBrands = Brand::where('status', 'active')
             ->where('is_featured', true)
+            ->with(['ownerVendor', 'verifiedDealerAuthorizations.vendor'])
             ->withCount(['products' => function ($q) {
                 $q->where('approval_status', 'approved')->where('status', 'active');
             }])

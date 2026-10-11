@@ -84,5 +84,11 @@ class Customer extends Authenticatable
                     })
                     ->latestOfMany();
     }
+
+    public function sampleRequests()
+    {
+        return $this->hasMany(SampleRequest::class)->latest();
+    }
 }
+
 

@@ -53,7 +53,7 @@ class WishlistService
      */
     public static function has($productId): bool
     {
-        return in_array($productId, self::getProductIds());
+        return in_array((int) $productId, array_map('intval', self::getProductIds()));
     }
 
     /**
@@ -61,6 +61,7 @@ class WishlistService
      */
     public static function toggle($productId): array
     {
+        $productId = (int) $productId;
         $product = Product::find($productId);
         if (!$product) {
             return ['success' => false, 'message' => 'Product not found.'];
@@ -93,23 +94,24 @@ class WishlistService
                 ];
             }
         } else {
-            $ids = Session::get(self::SESSION_KEY, []);
+            $ids = array_map('intval', Session::get(self::SESSION_KEY, []));
             if (in_array($productId, $ids)) {
                 $ids = array_values(array_diff($ids, [$productId]));
                 Session::put(self::SESSION_KEY, $ids);
                 return [
                     'success' => true,
                     'action'  => 'removed',
-                    'message' => "Removed from Wishlist.",
+                    'message' => "Removed {$product->name} from Wishlist.",
                     'count'   => count($ids)
                 ];
             } else {
-                $ids[] = (int) $productId;
+                $ids[] = $productId;
+                $ids = array_values(array_unique($ids));
                 Session::put(self::SESSION_KEY, $ids);
                 return [
                     'success' => true,
                     'action'  => 'added',
-                    'message' => "Saved to Wishlist.",
+                    'message' => "Saved {$product->name} to Wishlist.",
                     'count'   => count($ids)
                 ];
             }
@@ -121,6 +123,7 @@ class WishlistService
      */
     public static function remove($productId): bool
     {
+        $productId = (int) $productId;
         if (Auth::guard('customer')->check()) {
             Wishlist::where('customer_id', Auth::guard('customer')->id())
                 ->where('product_id', $productId)
@@ -128,7 +131,7 @@ class WishlistService
             return true;
         }
 
-        $ids = Session::get(self::SESSION_KEY, []);
+        $ids = array_map('intval', Session::get(self::SESSION_KEY, []));
         $ids = array_values(array_diff($ids, [$productId]));
         Session::put(self::SESSION_KEY, $ids);
         return true;
